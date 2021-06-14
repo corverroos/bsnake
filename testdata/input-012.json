@@ -1,0 +1,153 @@
+{
+ "game": {
+  "id": "26498446-e870-4e2b-8e26-0a292527b826",
+  "timeout": 0
+ },
+ "turn": 48,
+ "board": {
+  "height": 11,
+  "width": 11,
+  "food": [
+   {
+    "x": 0,
+    "y": 7
+   },
+   {
+    "x": 9,
+    "y": 8
+   },
+   {
+    "x": 5,
+    "y": 0
+   },
+   {
+    "x": 9,
+    "y": 2
+   }
+  ],
+  "snakes": [
+   {
+    "id": "gs_KwSMKCxS7kWkdMDpt77jcjcX",
+    "name": "Severus Snake",
+    "health": 84,
+    "body": [
+     {
+      "x": 5,
+      "y": 1
+     },
+     {
+      "x": 5,
+      "y": 2
+     },
+     {
+      "x": 5,
+      "y": 3
+     },
+     {
+      "x": 5,
+      "y": 4
+     },
+     {
+      "x": 5,
+      "y": 5
+     },
+     {
+      "x": 5,
+      "y": 6
+     },
+     {
+      "x": 4,
+      "y": 6
+     },
+     {
+      "x": 3,
+      "y": 6
+     }
+    ],
+    "head": {
+     "x": 5,
+     "y": 1
+    },
+    "length": 8,
+    "shout": "",
+    "latency": ""
+   },
+   {
+    "id": "gs_btJhBySxvcytMVBpxGXJWhdP",
+    "name": "spaceworm",
+    "health": 81,
+    "body": [
+     {
+      "x": 4,
+      "y": 0
+     },
+     {
+      "x": 4,
+      "y": 1
+     },
+     {
+      "x": 4,
+      "y": 2
+     },
+     {
+      "x": 3,
+      "y": 2
+     },
+     {
+      "x": 2,
+      "y": 2
+     },
+     {
+      "x": 2,
+      "y": 3
+     }
+    ],
+    "head": {
+     "x": 4,
+     "y": 0
+    },
+    "length": 6,
+    "shout": "",
+    "latency": ""
+   }
+  ]
+ },
+ "you": {
+  "id": "gs_btJhBySxvcytMVBpxGXJWhdP",
+  "name": "spaceworm",
+  "health": 81,
+  "body": [
+   {
+    "x": 4,
+    "y": 0
+   },
+   {
+    "x": 4,
+    "y": 1
+   },
+   {
+    "x": 4,
+    "y": 2
+   },
+   {
+    "x": 3,
+    "y": 2
+   },
+   {
+    "x": 2,
+    "y": 2
+   },
+   {
+    "x": 2,
+    "y": 3
+   }
+  ],
+  "head": {
+   "x": 4,
+   "y": 0
+  },
+  "length": 6,
+  "shout": "",
+  "latency": ""
+ }
+}

@@ -1,0 +1,191 @@
+{
+ "game": {
+  "id": "0fb88efe-2d55-4c67-88dd-55138cf4bbae",
+  "timeout": 0
+ },
+ "turn": 93,
+ "board": {
+  "height": 11,
+  "width": 11,
+  "food": [
+   {
+    "x": 10,
+    "y": 8
+   },
+   {
+    "x": 10,
+    "y": 1
+   },
+   {
+    "x": 8,
+    "y": 6
+   },
+   {
+    "x": 7,
+    "y": 1
+   },
+   {
+    "x": 4,
+    "y": 2
+   },
+   {
+    "x": 4,
+    "y": 1
+   }
+  ],
+  "snakes": [
+   {
+    "id": "gs_QdmCbSxtcpVKF7twCSd3ccrQ",
+    "name": "remmy",
+    "health": 82,
+    "body": [
+     {
+      "x": 10,
+      "y": 9
+     },
+     {
+      "x": 10,
+      "y": 10
+     },
+     {
+      "x": 9,
+      "y": 10
+     },
+     {
+      "x": 8,
+      "y": 10
+     },
+     {
+      "x": 7,
+      "y": 10
+     },
+     {
+      "x": 6,
+      "y": 10
+     },
+     {
+      "x": 5,
+      "y": 10
+     }
+    ],
+    "head": {
+     "x": 10,
+     "y": 9
+    },
+    "length": 7,
+    "shout": "",
+    "latency": ""
+   },
+   {
+    "id": "gs_x9VHXXWrqH4PMPGkk9fcV6T9",
+    "name": "spaceworm",
+    "health": 7,
+    "body": [
+     {
+      "x": 8,
+      "y": 7
+     },
+     {
+      "x": 8,
+      "y": 8
+     },
+     {
+      "x": 7,
+      "y": 8
+     }
+    ],
+    "head": {
+     "x": 8,
+     "y": 7
+    },
+    "length": 3,
+    "shout": "",
+    "latency": ""
+   },
+   {
+    "id": "gs_tBG4rdtJF7XfFghxYXVqv8FS",
+    "name": "Pathfinder",
+    "health": 95,
+    "body": [
+     {
+      "x": 9,
+      "y": 2
+     },
+     {
+      "x": 10,
+      "y": 2
+     },
+     {
+      "x": 10,
+      "y": 3
+     },
+     {
+      "x": 9,
+      "y": 3
+     },
+     {
+      "x": 8,
+      "y": 3
+     },
+     {
+      "x": 7,
+      "y": 3
+     },
+     {
+      "x": 6,
+      "y": 3
+     },
+     {
+      "x": 5,
+      "y": 3
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 3,
+      "y": 3
+     },
+     {
+      "x": 2,
+      "y": 3
+     }
+    ],
+    "head": {
+     "x": 9,
+     "y": 2
+    },
+    "length": 11,
+    "shout": "",
+    "latency": ""
+   }
+  ]
+ },
+ "you": {
+  "id": "gs_x9VHXXWrqH4PMPGkk9fcV6T9",
+  "name": "spaceworm",
+  "health": 7,
+  "body": [
+   {
+    "x": 8,
+    "y": 7
+   },
+   {
+    "x": 8,
+    "y": 8
+   },
+   {
+    "x": 7,
+    "y": 8
+   }
+  ],
+  "head": {
+   "x": 8,
+   "y": 7
+  },
+  "length": 3,
+  "shout": "",
+  "latency": ""
+ }
+}

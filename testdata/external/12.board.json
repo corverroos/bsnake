@@ -1,0 +1,50 @@
+{
+ "game": {
+  "id": "329130",
+  "timeout": 500
+ },
+ "turn": 200,
+ "board": {
+  "height": 7,
+  "width": 7,
+  "food": [],
+  "snakes": [
+   {
+    "id": "you",
+    "name": "#22aa34",
+    "health": 100,
+    "body": [
+     {
+      "x": 3,
+      "y": 3
+     }
+    ],
+    "head": {
+     "x": 3,
+     "y": 3
+    },
+    "length": 1,
+    "shout": "",
+    "latency": ""
+   }
+  ]
+ },
+ "you": {
+  "id": "you",
+  "name": "#22aa34",
+  "health": 100,
+  "body": [
+   {
+    "x": 3,
+    "y": 3
+   }
+  ],
+  "head": {
+   "x": 3,
+   "y": 3
+  },
+  "length": 1,
+  "shout": "",
+  "latency": ""
+ }
+}

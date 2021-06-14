@@ -1,0 +1,163 @@
+{
+ "game": {
+  "id": "5a17ecd1-544e-4163-add0-06eb8be6e88c",
+  "timeout": 0
+ },
+ "turn": 45,
+ "board": {
+  "height": 11,
+  "width": 11,
+  "food": [
+   {
+    "x": 6,
+    "y": 0
+   },
+   {
+    "x": 1,
+    "y": 3
+   }
+  ],
+  "snakes": [
+   {
+    "id": "gs_pHHkMtfMj8Rr89Pgc3VdgDTP",
+    "name": "Xiangliu",
+    "health": 78,
+    "body": [
+     {
+      "x": 7,
+      "y": 4
+     },
+     {
+      "x": 7,
+      "y": 5
+     },
+     {
+      "x": 6,
+      "y": 5
+     },
+     {
+      "x": 5,
+      "y": 5
+     },
+     {
+      "x": 5,
+      "y": 6
+     },
+     {
+      "x": 4,
+      "y": 6
+     },
+     {
+      "x": 3,
+      "y": 6
+     },
+     {
+      "x": 3,
+      "y": 7
+     }
+    ],
+    "head": {
+     "x": 7,
+     "y": 4
+    },
+    "length": 8,
+    "shout": "",
+    "latency": ""
+   },
+   {
+    "id": "gs_VKhBvGFBPXfTwhCr8kJPq4dR",
+    "name": "spaceworm",
+    "health": 80,
+    "body": [
+     {
+      "x": 6,
+      "y": 3
+     },
+     {
+      "x": 5,
+      "y": 3
+     },
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 4,
+      "y": 4
+     },
+     {
+      "x": 5,
+      "y": 4
+     }
+    ],
+    "head": {
+     "x": 6,
+     "y": 3
+    },
+    "length": 5,
+    "shout": "",
+    "latency": ""
+   },
+   {
+    "id": "gs_xJQG6XkpgxccKT4wtXtj7qSK",
+    "name": "Jack of all Snakes",
+    "health": 55,
+    "body": [
+     {
+      "x": 6,
+      "y": 1
+     },
+     {
+      "x": 5,
+      "y": 1
+     },
+     {
+      "x": 4,
+      "y": 1
+     }
+    ],
+    "head": {
+     "x": 6,
+     "y": 1
+    },
+    "length": 3,
+    "shout": "",
+    "latency": ""
+   }
+  ]
+ },
+ "you": {
+  "id": "gs_VKhBvGFBPXfTwhCr8kJPq4dR",
+  "name": "spaceworm",
+  "health": 80,
+  "body": [
+   {
+    "x": 6,
+    "y": 3
+   },
+   {
+    "x": 5,
+    "y": 3
+   },
+   {
+    "x": 4,
+    "y": 3
+   },
+   {
+    "x": 4,
+    "y": 4
+   },
+   {
+    "x": 5,
+    "y": 4
+   }
+  ],
+  "head": {
+   "x": 6,
+   "y": 3
+  },
+  "length": 5,
+  "shout": "",
+  "latency": ""
+ }
+}

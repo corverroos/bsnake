@@ -1,0 +1,75 @@
+{
+ "game": {
+  "id": "8748cc01-e288-4126-9004-801cdf046366",
+  "timeout": 0
+ },
+ "turn": 3,
+ "board": {
+  "height": 7,
+  "width": 7,
+  "food": [
+   {
+    "x": 6,
+    "y": 4
+   },
+   {
+    "x": 3,
+    "y": 3
+   }
+  ],
+  "snakes": [
+   {
+    "id": "gs_TpFDC98MQg9cmyWgkjMktb94",
+    "name": "spaceworm",
+    "health": 97,
+    "body": [
+     {
+      "x": 4,
+      "y": 3
+     },
+     {
+      "x": 4,
+      "y": 4
+     },
+     {
+      "x": 5,
+      "y": 4
+     }
+    ],
+    "head": {
+     "x": 4,
+     "y": 3
+    },
+    "length": 3,
+    "shout": "",
+    "latency": ""
+   }
+  ]
+ },
+ "you": {
+  "id": "gs_TpFDC98MQg9cmyWgkjMktb94",
+  "name": "spaceworm",
+  "health": 97,
+  "body": [
+   {
+    "x": 4,
+    "y": 3
+   },
+   {
+    "x": 4,
+    "y": 4
+   },
+   {
+    "x": 5,
+    "y": 4
+   }
+  ],
+  "head": {
+   "x": 4,
+   "y": 3
+  },
+  "length": 3,
+  "shout": "",
+  "latency": ""
+ }
+}

@@ -1,0 +1,121 @@
+{
+ "game": {
+  "id": "22cf9dfa-19ba-4756-ab81-aee17ec6b609",
+  "timeout": 0
+ },
+ "turn": 33,
+ "board": {
+  "height": 7,
+  "width": 7,
+  "food": [
+   {
+    "x": 0,
+    "y": 6
+   },
+   {
+    "x": 1,
+    "y": 5
+   },
+   {
+    "x": 0,
+    "y": 4
+   },
+   {
+    "x": 6,
+    "y": 4
+   }
+  ],
+  "snakes": [
+   {
+    "id": "gs_4dVcgQ4ScDQxggR7KWjRJMH7",
+    "name": "spacetree",
+    "health": 67,
+    "body": [
+     {
+      "x": 4,
+      "y": 5
+     },
+     {
+      "x": 5,
+      "y": 5
+     },
+     {
+      "x": 5,
+      "y": 6
+     }
+    ],
+    "head": {
+     "x": 4,
+     "y": 5
+    },
+    "length": 3,
+    "shout": "",
+    "latency": null
+   },
+   {
+    "id": "gs_FJCbSpQ8rkB9CtvHy3g8S7v3",
+    "name": "spaceworm",
+    "health": 75,
+    "body": [
+     {
+      "x": 2,
+      "y": 5
+     },
+     {
+      "x": 2,
+      "y": 4
+     },
+     {
+      "x": 2,
+      "y": 3
+     },
+     {
+      "x": 2,
+      "y": 2
+     },
+     {
+      "x": 2,
+      "y": 1
+     },
+     {
+      "x": 2,
+      "y": 0
+     }
+    ],
+    "head": {
+     "x": 2,
+     "y": 5
+    },
+    "length": 6,
+    "shout": "",
+    "latency": null
+   }
+  ]
+ },
+ "you": {
+  "id": "gs_4dVcgQ4ScDQxggR7KWjRJMH7",
+  "name": "spacetree",
+  "health": 67,
+  "body": [
+   {
+    "x": 4,
+    "y": 5
+   },
+   {
+    "x": 5,
+    "y": 5
+   },
+   {
+    "x": 5,
+    "y": 6
+   }
+  ],
+  "head": {
+   "x": 4,
+   "y": 5
+  },
+  "length": 3,
+  "shout": "",
+  "latency": null
+ }
+}
