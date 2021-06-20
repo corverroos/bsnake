@@ -19,6 +19,10 @@ func Test500Once(t *testing.T) {
 		Exp  string
 	}{
 		{
+			Name: "../testdata/input-001.json",
+			Exp:  "down",
+		},
+		{
 			Name: "../testdata/input-017.json",
 			Exp:  "left",
 		},
@@ -34,12 +38,22 @@ func Test500Once(t *testing.T) {
 			Name: "../testdata/input-022.json",
 			Exp:  "right",
 		},
+		{
+			Name: "../testdata/input-023.json",
+			Exp:  "right",
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
 			board, rootIdx := fileToBoard(t, test.Name)
-			root := NewRoot(&rules.StandardRuleset{}, board, rootIdx)
+
+			rulset := rules.Ruleset(&rules.StandardRuleset{})
+			if len(board.Snakes) == 1 {
+				rulset = &rules.SoloRuleset{}
+			}
+
+			root := NewRoot(rulset, board, rootIdx)
 			fmt.Printf("JCR: rootIdx=%v\n", rootIdx)
 			for i := 0; i < 10000; i++ {
 				rand.Seed(int64(i))
@@ -64,6 +78,51 @@ func Test500Once(t *testing.T) {
 		})
 	}
 }
+
+func TestLen(t *testing.T) {
+	res := make(map[int]float64)
+	assignLenRewards(res, map[int]int{0: 0}, map[int]int{0: 2})
+	require.Equal(t, -0.4, res[0])
+}
+
+//func TestAssignLenTups(t *testing.T) {
+//	tests := []struct {
+//		Count int
+//		Exp map[int]float64
+//	}{
+//		{
+//			Count: 0,
+//			Exp: map[int]float64{},
+//		},{
+//			Count: 1,
+//			Exp: map[int]float64{0:0.5},
+//		},{
+//			Count: 2,
+//			Exp: map[int]float64{0:0.5, 1:-0.5},
+//		},{
+//			Count: 3,
+//			Exp: map[int]float64{0:0.5, 1:0, 2:-0.5},
+//		},{
+//			Count: 6,
+//			Exp: map[int]float64{0:0.5, 1:0.3333333333333333, 2:0.16666666666666666, 3:-0.16666666666666666, 4:-0.3333333333333333, 5:-0.5},
+//		},
+//	}
+//
+//	for _, test := range tests {
+//		t.Run(fmt.Sprint(test.Count), func(t *testing.T) {
+//			res := make(map[int]float64)
+//			var tups []intTup
+//			for i := 0; i < test.Count; i++ {
+//				tups = append(tups, intTup{
+//					K: i,
+//					V: 10-i,
+//				})
+//			}
+//			assignLenRewards(res, tups)
+//			require.EqualValues(t, res, test.Exp)
+//		})
+//	}
+//}
 
 func TestGenMoves(t *testing.T) {
 	tests := []struct {
@@ -120,7 +179,7 @@ func TestPlayoutRational(t *testing.T) {
 			n0 := NewRoot(&rules.StandardRuleset{}, board, rootIdx)
 
 			rand.Seed(0)
-			totals, err := playoutRandomRational(n0)
+			totals, err := playoutRandomRational(n0, n0)
 			jtest.RequireNil(t, err)
 			require.EqualValues(t, test.Exp, totals)
 		})

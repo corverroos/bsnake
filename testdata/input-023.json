@@ -1,0 +1,105 @@
+{
+ "game": {
+  "id": "e2f81154-fa1d-4328-8fb8-7ccd7634edcd",
+  "timeout": 0
+ },
+ "turn": 1,
+ "board": {
+  "height": 11,
+  "width": 11,
+  "food": [
+   {
+    "x": 2,
+    "y": 8
+   },
+   {
+    "x": 2,
+    "y": 4
+   },
+   {
+    "x": 5,
+    "y": 5
+   }
+  ],
+  "snakes": [
+   {
+    "id": "gs_QTYRGcwbRjdD3g3SvrXq3GRH",
+    "name": "boomboom",
+    "health": 99,
+    "body": [
+     {
+      "x": 1,
+      "y": 8
+     },
+     {
+      "x": 1,
+      "y": 9
+     },
+     {
+      "x": 1,
+      "y": 9
+     }
+    ],
+    "head": {
+     "x": 1,
+     "y": 8
+    },
+    "length": 3,
+    "shout": "",
+    "latency": null
+   },
+   {
+    "id": "gs_PSyVk7GBKGQFhxvG38Jc66J7",
+    "name": "boomboom",
+    "health": 99,
+    "body": [
+     {
+      "x": 1,
+      "y": 6
+     },
+     {
+      "x": 1,
+      "y": 5
+     },
+     {
+      "x": 1,
+      "y": 5
+     }
+    ],
+    "head": {
+     "x": 1,
+     "y": 6
+    },
+    "length": 3,
+    "shout": "",
+    "latency": null
+   }
+  ]
+ },
+ "you": {
+  "id": "gs_QTYRGcwbRjdD3g3SvrXq3GRH",
+  "name": "boomboom",
+  "health": 99,
+  "body": [
+   {
+    "x": 1,
+    "y": 8
+   },
+   {
+    "x": 1,
+    "y": 9
+   },
+   {
+    "x": 1,
+    "y": 9
+   }
+  ],
+  "head": {
+   "x": 1,
+   "y": 8
+  },
+  "length": 3,
+  "shout": "",
+  "latency": null
+ }
+}

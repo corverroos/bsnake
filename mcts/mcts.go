@@ -1,6 +1,7 @@
 package mcts
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"math/rand"
@@ -43,7 +44,7 @@ func Once(root *node, logd logd) error {
 	}
 
 	t0 := time.Now()
-	totals, err := playoutRandomRational(node)
+	totals, err := playoutRandomRational(root, node)
 	if err != nil {
 		return err
 	}
@@ -81,7 +82,7 @@ func expansion(n *node, logd logd) (*node, error) {
 	return res, nil
 }
 
-func playoutRandomRational(node *node) (map[int]float64, error) {
+func playoutRandomRational(root, node *node) (map[int]float64, error) {
 	b := node.board
 	r := node.ruleset
 
@@ -105,7 +106,13 @@ func playoutRandomRational(node *node) (map[int]float64, error) {
 		return res
 	}
 
+	startLens := make(map[int]int)
+	for i := 0; i < len(root.board.Snakes); i++ {
+		startLens[i] = len(root.board.Snakes[i].Body)
+	}
+
 	var count int
+	res := make(map[int]float64)
 	for {
 		var err error
 		moves := randMoves(b)
@@ -125,17 +132,57 @@ func playoutRandomRational(node *node) (map[int]float64, error) {
 			continue
 		}
 
-		res := make(map[int]float64)
 		for i := 0; i < len(b.Snakes); i++ {
 			if b.Snakes[i].EliminatedCause != "" {
 				res[i] = -1
-			} else if over {
+				continue
+			}
+			if over {
 				res[i] = 1
-			} else {
-				res[i] = 0
+				continue
 			}
 		}
+
+		endLens := make(map[int]int)
+		for i := 0; i < len(b.Snakes); i++ {
+			endLens[i] = len(b.Snakes[i].Body)
+		}
+		assignLenRewards(res, startLens, endLens)
 		return res, nil
+	}
+}
+
+func assignLenRewards(res map[int]float64, start, end map[int]int) {
+	if len(start) == 1 {
+		for i := range start {
+			res[i] = -0.1 * float64(end[i]-start[i])
+			return
+		}
+	}
+
+	rank := func(m map[int]int, i int) float64 {
+		var rank float64
+		myLen := m[i]
+		for j, l := range m {
+			if j == i {
+				continue
+			}
+			if l >= myLen {
+				rank++
+			}
+		}
+		return rank
+	}
+
+	for i := range end {
+		if rank(end, i) == 0 {
+			// Longest snake at the end gets 0.5
+			res[i] = 0.1 * float64(len(end)-1)
+			continue
+		}
+		res[i] -= 0.1
+		// Other snakes get 0.1 for each food they eat
+		res[i] += 0.2 * float64(end[i]-start[i])
 	}
 }
 
@@ -294,6 +341,31 @@ func isRationalMove(board *rules.BoardState, snakeIdx int, move string) bool {
 	}
 
 	return true
+}
+
+func SelectMove(ctx context.Context, board *rules.BoardState, rootIDx int) (string, error) {
+	t0 := time.Now()
+
+	var ruleset rules.Ruleset = &rules.StandardRuleset{}
+
+	if len(board.Snakes) == 1 {
+		ruleset = &rules.SoloRuleset{}
+	}
+
+	root := NewRoot(ruleset, board, rootIDx)
+	logd := func(string, ...interface{}) {}
+	for {
+		err := Once(root, logd)
+		if err != nil {
+			return "", err
+		}
+
+		if time.Since(t0) < time.Millisecond*300 {
+			continue
+		}
+
+		return root.RobustMove(rootIDx), nil
+	}
 }
 
 func movePoint(p rules.Point, move string) rules.Point {

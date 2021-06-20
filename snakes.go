@@ -1,19 +1,23 @@
 package main
 
-import "context"
+import (
+	"context"
+
+	"github.com/corverroos/bsnake/mcts"
+)
 
 type snake struct {
-	Info BattlesnakeInfoResponse
+	Info  BattlesnakeInfoResponse
 	Start func(ctx context.Context, req GameRequest) error
-	End func(ctx context.Context,req GameRequest) error
-	Move func(ctx context.Context,req GameRequest) (string, error)
+	End   func(ctx context.Context, req GameRequest) error
+	Move  func(ctx context.Context, req GameRequest) (string, error)
 }
 
 var snakes = map[string]snake{
-	"basic" : {
-		Info:  BattlesnakeInfoResponse{
+	"basic": {
+		Info: BattlesnakeInfoResponse{
 			APIVersion: "1",
-			Author:     "spaceworm",
+			Author:     "corverroos",
 			Color:      "#000000",
 			Head:       "sand-worm",
 			Tail:       "round-bum",
@@ -24,10 +28,10 @@ var snakes = map[string]snake{
 			return selectMove(ctx, req, basicWeights)
 		},
 	},
-	"ball" : {
-		Info:  BattlesnakeInfoResponse{
+	"ball": {
+		Info: BattlesnakeInfoResponse{
 			APIVersion: "1",
-			Author:     "spaceball",
+			Author:     "corverroos",
 			Color:      "#00264d",
 			Head:       "bendr",
 			Tail:       "freckled",
@@ -38,10 +42,10 @@ var snakes = map[string]snake{
 			return selectMove(ctx, req, ballWeights)
 		},
 	},
-	"monty" : {
-		Info:  BattlesnakeInfoResponse{
+	"monty": {
+		Info: BattlesnakeInfoResponse{
 			APIVersion: "1",
-			Author:     "spacetree",
+			Author:     "corverroos",
 		},
 		Start: nil,
 		End:   nil,
@@ -49,8 +53,20 @@ var snakes = map[string]snake{
 			return selectMCTS(ctx, req, basicWeights)
 		},
 	},
+	"boomboom": {
+		Info: BattlesnakeInfoResponse{
+			APIVersion: "1",
+			Author:     "corverroos",
+			Color:      "#001a00",
+			Head:       "shades",
+			Tail:       "sharp",
+		},
+		Move: func(ctx context.Context, req GameRequest) (string, error) {
+			board, rootIdx := gameReqToBoard(req)
+			return mcts.SelectMove(ctx, board, rootIdx)
+		},
+	},
 }
-
 
 const (
 	scoreWall = -1001
@@ -62,7 +78,7 @@ var basicWeights = weights{
 	Wall:         scoreWall,
 	Back:         scoreBack,
 	Body:         scoreBody,
-	MyTail: +10,
+	MyTail:       +10,
 	Tail:         -50,
 	Hole:         -100,
 	H2H:          -100,
@@ -75,7 +91,7 @@ var ballWeights = weights{
 	Wall:         scoreWall,
 	Back:         scoreBack,
 	Body:         scoreBody,
-	MyTail:         10,
+	MyTail:       10,
 	Hole:         -100,
 	H2H:          -100,
 	H2HWin:       -100,

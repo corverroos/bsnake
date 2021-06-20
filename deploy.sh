@@ -3,16 +3,18 @@
 export CGO_ENABLED=0
 export GOOS=linux
 
+TARGET=root@battle01
+
 echo "building"
 go build -o="/tmp/bsnake" .
-scp run.sh root@droplet01:.
+scp run.sh $TARGET:.
 
 echo "stopping"
-ssh root@droplet01 "pkill bsnake"
+ssh $TARGET "pkill bsnake"
 
 echo "copying"
-scp /tmp/bsnake root@droplet01:.
+scp /tmp/bsnake $TARGET:.
 
 echo "starting"
-ssh root@droplet01 "./run.sh"
+ssh $TARGET "./run.sh"
 
