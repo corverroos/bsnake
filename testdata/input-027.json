@@ -1,0 +1,113 @@
+{
+ "game": {
+  "id": "d20d59d6-4517-4e37-b12f-8f7358e336c5",
+  "timeout": 0
+ },
+ "turn": 5,
+ "board": {
+  "height": 11,
+  "width": 11,
+  "food": [
+   {
+    "x": 5,
+    "y": 5
+   },
+   {
+    "x": 8,
+    "y": 9
+   }
+  ],
+  "snakes": [
+   {
+    "id": "gs_KPX93Hb9GDWwbgh7wXpmGpkX",
+    "name": "Little Snake",
+    "health": 97,
+    "body": [
+     {
+      "x": 4,
+      "y": 5
+     },
+     {
+      "x": 3,
+      "y": 5
+     },
+     {
+      "x": 2,
+      "y": 5
+     },
+     {
+      "x": 2,
+      "y": 4
+     }
+    ],
+    "head": {
+     "x": 4,
+     "y": 5
+    },
+    "length": 4,
+    "shout": "",
+    "latency": null
+   },
+   {
+    "id": "gs_YFRcPWbQXQQF4DhMkyTwCjg3",
+    "name": "spaceworm",
+    "health": 97,
+    "body": [
+     {
+      "x": 6,
+      "y": 5
+     },
+     {
+      "x": 6,
+      "y": 6
+     },
+     {
+      "x": 6,
+      "y": 7
+     },
+     {
+      "x": 6,
+      "y": 8
+     }
+    ],
+    "head": {
+     "x": 6,
+     "y": 5
+    },
+    "length": 4,
+    "shout": "",
+    "latency": null
+   }
+  ]
+ },
+ "you": {
+  "id": "gs_YFRcPWbQXQQF4DhMkyTwCjg3",
+  "name": "spaceworm",
+  "health": 97,
+  "body": [
+   {
+    "x": 6,
+    "y": 5
+   },
+   {
+    "x": 6,
+    "y": 6
+   },
+   {
+    "x": 6,
+    "y": 7
+   },
+   {
+    "x": 6,
+    "y": 8
+   }
+  ],
+  "head": {
+   "x": 6,
+   "y": 5
+  },
+  "length": 4,
+  "shout": "",
+  "latency": null
+ }
+}

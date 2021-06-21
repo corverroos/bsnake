@@ -41,21 +41,22 @@ func (c Coord) Move(m Move) Coord {
 }
 
 type Battlesnake struct {
-	ID     string  `json:"id"`
-	Name   string  `json:"name"`
-	Health int   `json:"health"`
-	Body   []Coord `json:"body"`
-	Head   Coord   `json:"head"`
-	Length int   `json:"length"`
-	Shout  string  `json:"shout"`
-	Latency interface{}   `json:"latency"`
+	ID      string      `json:"id"`
+	Name    string      `json:"name"`
+	Health  int         `json:"health"`
+	Body    []Coord     `json:"body"`
+	Head    Coord       `json:"head"`
+	Length  int         `json:"length"`
+	Shout   string      `json:"shout"`
+	Latency interface{} `json:"latency"`
 }
 
 type Board struct {
-	Height int           `json:"height"`
-	Width  int           `json:"width"`
-	Food   []Coord       `json:"food"`
-	Snakes []Battlesnake `json:"snakes"`
+	Height  int           `json:"height"`
+	Width   int           `json:"width"`
+	Food    []Coord       `json:"food"`
+	Hazards []Coord       `json:"hazards,omitempty"`
+	Snakes  []Battlesnake `json:"snakes"`
 }
 
 type BattlesnakeInfoResponse struct {
@@ -78,7 +79,6 @@ type MoveResponse struct {
 	Shout string `json:"shout,omitempty"`
 }
 
-
 type Move int
 
 const (
@@ -87,7 +87,6 @@ const (
 	Right Move = 3
 	Left  Move = 4
 )
-
 
 func (m Move) String() string {
 	switch m {
@@ -117,7 +116,6 @@ func RandMoves() []Move {
 	return res
 }
 
-
 type Area map[Coord]int
 
 func (a Area) Size() int {
@@ -144,7 +142,7 @@ func (a Area) MinTTL() (Coord, int) {
 			found = true
 		}
 	}
-	if ! found {
+	if !found {
 		return Coord{}, 0
 	}
 	return c, min
@@ -153,7 +151,7 @@ func (a Area) MinTTL() (Coord, int) {
 func (a Area) Viz() string {
 	var res [][]rune
 	const (
-		s  = '.'
+		s = '.'
 		f = '*'
 	)
 	var maxY, maxX int
@@ -168,7 +166,6 @@ func (a Area) Viz() string {
 			maxY = c.Y
 		}
 	}
-
 
 	for y := 0; y <= maxY; y++ {
 		var row []rune

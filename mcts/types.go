@@ -1,9 +1,9 @@
 package mcts
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
+	"sort"
 
 	"github.com/BattlesnakeOfficial/rules"
 )
@@ -125,7 +125,6 @@ func (n *node) MinMaxMove(idx int) string {
 	)
 
 	for move, min := range mins {
-		fmt.Printf("JCR: minmax move=%v min-avg=%v\n", move, min)
 		if min > max {
 			res = move
 			max = min
@@ -135,29 +134,62 @@ func (n *node) MinMaxMove(idx int) string {
 	return res
 }
 
-func (n *node) RobustMove(idx int) string {
-	totals := make(map[string]float64)
+func (n *node) MinAvgScore(idx int, move string) float64 {
+	var min = float64(math.MaxInt32)
 	for _, tuple := range n.childs {
-		for _, move := range Moves {
+		if tuple.edge.Is(idx, move) {
+			avg := tuple.child.AvgScore(idx)
+			if min > avg {
+				min = avg
+			}
+		}
+	}
+	return min
+}
+
+func (n *node) RobustSafeMove(idx int) string {
+	var first string
+	for i, move := range n.RobustMoves(idx) {
+		if i == 0 {
+			first = move
+		}
+		if n.MinAvgScore(idx, move) <= -1 {
+			continue
+		}
+		return move
+	}
+
+	return first
+}
+
+func (n *node) RobustMoves(idx int) []string {
+	type tup struct {
+		K string
+		V float64
+	}
+
+	totals := make([]tup, len(Moves))
+
+	for _, tuple := range n.childs {
+		for i, move := range Moves {
 			if tuple.edge.Is(idx, move) {
-				totals[move] += tuple.child.n
+				totals[i].K = move
+				totals[i].V += tuple.child.n
 			}
 		}
 	}
 
-	var (
-		res string
-		max = float64(math.MinInt32)
-	)
+	sort.Slice(totals, func(i, j int) bool {
+		return totals[i].V > totals[j].V
+	})
 
-	for move, t := range totals {
-		fmt.Printf("JCR: robust move=%v visits=%v\n", move, t)
-		if t > max {
-			res = move
-			max = t
+	var res []string
+	for _, t := range totals {
+		if t.K == "" {
+			continue
 		}
+		res = append(res, t.K)
 	}
-
 	return res
 }
 

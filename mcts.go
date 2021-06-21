@@ -3,25 +3,25 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/BattlesnakeOfficial/rules"
 	"math"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/BattlesnakeOfficial/rules"
 )
 
 var mctsC = 2.0 * 100.0 * math.Sqrt(2.0)
 
 type mcnode struct {
 	Board *rules.BoardState // Result of moves below applied to parent board state.
-	n float64 // Number of visits
-	t float64 // Total score
-	dead bool
-	turn int
-
+	n     float64           // Number of visits
+	t     float64           // Total score
+	dead  bool
+	turn  int
 
 	parent *mcnode
-	move string // my previous move (suffix of upstream edge)
+	move   string           // my previous move (suffix of upstream edge)
 	childs map[edge]*mcnode // Child node by next own move after previous all moves.
 }
 
@@ -37,8 +37,8 @@ func newEdge(moves []rules.SnakeMove, next string) edge {
 		res.WriteByte(move.Move[0])
 	}
 
-		res.WriteString("_")
-		res.WriteByte(next[0])
+	res.WriteString("_")
+	res.WriteByte(next[0])
 
 	return edge(res.String())
 }
@@ -61,7 +61,7 @@ func (n *mcnode) UCB1() (float64, bool) {
 	if n.dead {
 		return -100, false
 	}
-	return n.t/n.n + mctsC * math.Sqrt(math.Log(n.parent.n)/n.n), false
+	return n.t/n.n + mctsC*math.Sqrt(math.Log(n.parent.n)/n.n), false
 }
 
 // AddChild adds a child for the given boardstate, the moves that resulted in it, and your next possible move.
@@ -77,7 +77,7 @@ func (n *mcnode) AddChild(b *rules.BoardState, moves []rules.SnakeMove, next str
 
 	child := &mcnode{
 		Board:  b,
-		turn:   n.turn+1,
+		turn:   n.turn + 1,
 		parent: n,
 		move:   next,
 	}
@@ -85,12 +85,12 @@ func (n *mcnode) AddChild(b *rules.BoardState, moves []rules.SnakeMove, next str
 	return child
 }
 
-func MCTSOnce(ruleset rules.Ruleset, root *mcnode, youIDx int, logd func(string,...interface{})) error {
+func MCTSOnce(ruleset rules.Ruleset, root *mcnode, youIDx int, logd func(string, ...interface{})) error {
 	if root.dead {
 		return nil
 	}
 	node := root
-	for !node.IsLeaf(){
+	for !node.IsLeaf() {
 		// Select node
 		max := float64(math.MinInt64)
 		var next *mcnode
@@ -102,7 +102,7 @@ func MCTSOnce(ruleset rules.Ruleset, root *mcnode, youIDx int, logd func(string,
 			if inf {
 				next = n
 				break
-			} else if score > max{
+			} else if score > max {
 				next = n
 				max = score
 			}
@@ -145,7 +145,7 @@ func MCTSOnce(ruleset rules.Ruleset, root *mcnode, youIDx int, logd func(string,
 		node.dead = true
 	}
 
-	if !node.dead{
+	if !node.dead {
 		// Rollout
 		logd("rollout\n")
 		var err error
@@ -188,7 +188,7 @@ func MCTSOnce(ruleset rules.Ruleset, root *mcnode, youIDx int, logd func(string,
 }
 
 func genMoves(board *rules.BoardState, youMove string, youIDx int) [][]rules.SnakeMove {
-	res := [][]rules.SnakeMove{{{ID:board.Snakes[youIDx].ID, Move: youMove}}}
+	res := [][]rules.SnakeMove{{{ID: board.Snakes[youIDx].ID, Move: youMove}}}
 	for i := 0; i < len(board.Snakes); i++ {
 		if i == youIDx || board.Snakes[i].EliminatedCause != "" {
 			continue
@@ -208,7 +208,7 @@ func genMoves(board *rules.BoardState, youMove string, youIDx int) [][]rules.Sna
 	return res
 }
 
-func RollOut(in *rules.BoardState, ruleset rules.Ruleset, youIDx int, youFirst string, logd func(string,...interface{})) (float64, error) {
+func RollOut(in *rules.BoardState, ruleset rules.Ruleset, youIDx int, youFirst string, logd func(string, ...interface{})) (float64, error) {
 	b := in
 
 	randMoves := func(b *rules.BoardState) []rules.SnakeMove {
@@ -216,7 +216,7 @@ func RollOut(in *rules.BoardState, ruleset rules.Ruleset, youIDx int, youFirst s
 		res := make([]rules.SnakeMove, len(b.Snakes))
 		for i := 0; i < len(b.Snakes); i++ {
 			for j, move := range RandMoves() {
-				if j < 3 && isDeadlyRulesMove(b, i,  move.String()) {
+				if j < 3 && isDeadlyRulesMove(b, i, move.String()) {
 					continue
 				}
 				res[i] = rules.SnakeMove{
@@ -259,7 +259,7 @@ func RollOut(in *rules.BoardState, ruleset rules.Ruleset, youIDx int, youFirst s
 			logd("rollout: game over (win)\n")
 			return 100, nil
 		}
-		
+
 		rolls++
 		if rolls > 10 {
 			var killed float64
@@ -273,7 +273,7 @@ func RollOut(in *rules.BoardState, ruleset rules.Ruleset, youIDx int, youFirst s
 			}
 			suffix := ""
 			if killed > 0 {
-				suffix = fmt.Sprintf("%.0f",killed)
+				suffix = fmt.Sprintf("%.0f", killed)
 			}
 			logd("rollout: end %s\n", suffix)
 			return killed, nil
@@ -284,7 +284,7 @@ func RollOut(in *rules.BoardState, ruleset rules.Ruleset, youIDx int, youFirst s
 var solorules = reflect.TypeOf(&rules.SoloRuleset{})
 
 func isDeadlyRulesMove(board *rules.BoardState, snakeIDx int, move string) bool {
-	next := moveRule(board.Snakes[snakeIDx].Body[0],move)
+	next := moveRule(board.Snakes[snakeIDx].Body[0], move)
 
 	if next.X < 0 || next.X >= board.Width {
 		return true
@@ -295,7 +295,7 @@ func isDeadlyRulesMove(board *rules.BoardState, snakeIDx int, move string) bool 
 	}
 
 	for i := 0; i < len(board.Snakes); i++ {
-		for j := 0; j < len(board.Snakes[i].Body) - 1; j++ {
+		for j := 0; j < len(board.Snakes[i].Body)-1; j++ {
 			if next.X == board.Snakes[i].Body[j].X && next.Y == board.Snakes[i].Body[j].Y {
 				return true
 			}
@@ -308,33 +308,32 @@ func isDeadlyRulesMove(board *rules.BoardState, snakeIDx int, move string) bool 
 func moveRule(p rules.Point, move string) rules.Point {
 	switch move {
 	case "up":
-		return rules.Point{X: p.X, Y: p.Y +1 }
+		return rules.Point{X: p.X, Y: p.Y + 1}
 	case "down":
-		return rules.Point{X: p.X, Y: p.Y -1 }
+		return rules.Point{X: p.X, Y: p.Y - 1}
 	case "left":
-		return rules.Point{X: p.X -1, Y: p.Y}
+		return rules.Point{X: p.X - 1, Y: p.Y}
 	case "right":
-		return rules.Point{X: p.X +1, Y: p.Y}
+		return rules.Point{X: p.X + 1, Y: p.Y}
 	}
 	panic("unknown move")
 }
-
 
 func gameReqToBoard(req GameRequest) (*rules.BoardState, int) {
 	var snakes []rules.Snake
 	var youIDx int
 	for i, snake := range req.Board.Snakes {
-		id := snake.Name
+		id := snake.ID
 		if id == "" {
-			id = snake.ID
+			id = snake.Name
 		}
 		snakes = append(snakes, rules.Snake{
-			ID:              id,
-			Body:            coordsToPoints(snake.Body),
-			Health:          int32(snake.Health),
+			ID:     id,
+			Body:   coordsToPoints(snake.Body),
+			Health: int32(snake.Health),
 		})
 		if req.You.ID == snake.ID {
-			youIDx=i
+			youIDx = i
 		}
 	}
 
@@ -346,7 +345,6 @@ func gameReqToBoard(req GameRequest) (*rules.BoardState, int) {
 	}, youIDx
 }
 
-
 func coordsToPoints(cl []Coord) (res []rules.Point) {
 	for _, c := range cl {
 		res = append(res, rules.Point{
@@ -356,7 +354,6 @@ func coordsToPoints(cl []Coord) (res []rules.Point) {
 	}
 	return res
 }
-
 
 func selectMCTS(ctx context.Context, req GameRequest, w weights) (string, error) {
 	t0 := time.Now()
@@ -368,7 +365,7 @@ func selectMCTS(ctx context.Context, req GameRequest, w weights) (string, error)
 
 	board, youIDx := gameReqToBoard(req)
 	root := &mcnode{
-		Board:  board,
+		Board: board,
 	}
 	for _, move := range Moves {
 		root.AddChild(board, nil, move.String())
@@ -385,7 +382,7 @@ func selectMCTS(ctx context.Context, req GameRequest, w weights) (string, error)
 			return "", err
 		}
 
-		if root.dead || time.Since(t0) > time.Millisecond * 100 {
+		if root.dead || time.Since(t0) > time.Millisecond*100 {
 			var choose *mcnode
 			for _, node := range root.childs {
 				if choose == nil || node.AvgScore() > choose.AvgScore() {
@@ -417,7 +414,7 @@ func logMCTS(t0 time.Time, root, choose *mcnode) {
 			star = "*"
 		}
 		score, inf := c.UCB1()
-		log.WriteString(fmt.Sprintf("%s=%.0f[%.0f%v] %v:%v ", m, c.AvgScore(), c.n, star,score, inf ))
+		log.WriteString(fmt.Sprintf("%s=%.0f[%.0f%v] %v:%v ", m, c.AvgScore(), c.n, star, score, inf))
 	}
 
 	log.WriteString(fmt.Sprintf("\n  graph: size=%d, duration=%s\n", gsize(root), time.Since(t0)))

@@ -57,13 +57,13 @@ var snakes = map[string]snake{
 		Info: BattlesnakeInfoResponse{
 			APIVersion: "1",
 			Author:     "corverroos",
-			Color:      "#001a00",
-			Head:       "shades",
-			Tail:       "sharp",
+			Color:      "#141452",
+			Head:       "viper",
+			Tail:       "rattle",
 		},
 		Move: func(ctx context.Context, req GameRequest) (string, error) {
 			board, rootIdx := gameReqToBoard(req)
-			return mcts.SelectMove(ctx, board, rootIdx)
+			return mcts.SelectMove(ctx, board, coordsToPoints(req.Board.Hazards), rootIdx)
 		},
 	},
 }

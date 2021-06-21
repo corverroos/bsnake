@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/luno/jettison/jtest"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"os"
 	"path"
@@ -16,6 +14,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/luno/jettison/jtest"
+	"github.com/stretchr/testify/require"
 )
 
 type input struct {
@@ -77,6 +78,7 @@ func boardToViz(req GameRequest) string {
 		yh = 'Y'
 		yb = 'y'
 		f  = '*'
+		h  = '░'
 	)
 	for y := 0; y < req.Board.Height; y++ {
 		var row []rune
@@ -84,6 +86,9 @@ func boardToViz(req GameRequest) string {
 			row = append(row, s)
 		}
 		res = append(res, row)
+	}
+	for _, c := range req.Board.Hazards {
+		res[c.Y][c.X] = h
 	}
 
 	for _, snake := range req.Board.Snakes {
@@ -234,7 +239,7 @@ func TestScoreMoves(t *testing.T) {
 			t0 := time.Now()
 			scores := make(map[Move]int)
 			for _, m := range Moves {
-				score, err := scoreMove(context.Background(), req, w,m, true)
+				score, err := scoreMove(context.Background(), req, w, m, true)
 				jtest.RequireNil(t, err)
 				scores[m] = score
 			}
@@ -268,7 +273,7 @@ func TestStack(t *testing.T) {
 	parse("testdata/external/11.board.json", &req)
 
 	a := fill(req, 2, req.You.Head.Move(Up))
-	require.Equal(t, -3, a[Coord{3,3}])
+	require.Equal(t, -3, a[Coord{3, 3}])
 	ttl, you, ok := isBody(req, req.You.Head)
 	require.True(t, ok)
 	require.True(t, you)
@@ -295,13 +300,13 @@ func TestExternal(t *testing.T) {
 			var req GameRequest
 			parse(file, &req)
 			var moves []Move
-			parse(strings.Replace(file, ".board.",".moves.", 1), &moves)
+			parse(strings.Replace(file, ".board.", ".moves.", 1), &moves)
 
 			w := basicWeights
 
 			scores := make(map[Move]int)
 			for _, m := range Moves {
-				score, err := scoreMove(context.Background(), req, w,m,true)
+				score, err := scoreMove(context.Background(), req, w, m, true)
 				jtest.RequireNil(t, err)
 				scores[m] = score
 			}
@@ -359,7 +364,6 @@ func reloadExternal(t *testing.T) {
 		err = os.WriteFile(fmt.Sprintf("testdata/external/%02d.board.txt", i), []byte(viz), 0644)
 		jtest.RequireNil(t, err)
 
-		fmt.Printf("JCR: exp=%#v\n", exp)
 		empty := len(exp.AcceptedMoves) == 1 && exp.AcceptedMoves[0] == ""
 		var moves []Move
 		if !empty {

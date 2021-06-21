@@ -42,6 +42,22 @@ func Test500Once(t *testing.T) {
 			Name: "../testdata/input-023.json",
 			Exp:  "right",
 		},
+		{
+			Name: "../testdata/input-024.json",
+			Exp:  "left", // Should be right
+		},
+		{
+			Name: "../testdata/input-025.json",
+			Exp:  "up",
+		},
+		{
+			Name: "../testdata/input-027.json",
+			Exp:  "down",
+		},
+		{
+			Name: "../testdata/input-028.json",
+			Exp:  "up",
+		},
 	}
 
 	for _, test := range tests {
@@ -54,7 +70,7 @@ func Test500Once(t *testing.T) {
 			}
 
 			root := NewRoot(rulset, board, rootIdx)
-			fmt.Printf("JCR: rootIdx=%v\n", rootIdx)
+			fmt.Printf("rootIdx=%v\n", rootIdx)
 			for i := 0; i < 10000; i++ {
 				rand.Seed(int64(i))
 				err := Once(root, func(s string, i ...interface{}) {
@@ -62,18 +78,20 @@ func Test500Once(t *testing.T) {
 				})
 				jtest.RequireNil(t, err)
 				require.Equal(t, float64(i+2), root.n)
-				//
-				//for _, tuple := range root.childs {
-				//	fmt.Printf("JCR: edge=%v visits=%v totals=%v\n", tuple.edge, tuple.child.n, tuple.child.totals)
-				//}
 			}
-			for _, tuple := range root.childs {
-				fmt.Printf("JCR: edge=%v visits=%v totals=%v\n", tuple.edge, tuple.child.n, tuple.child.totals)
-			}
-			require.Equal(t, test.Exp, root.RobustMove(rootIdx))
 
-			if !strings.Contains(t.Name(), "-021") {
+			for _, tuple := range root.childs {
+				fmt.Printf("edge=%v visits=%v totals=%v\n", tuple.edge, tuple.child.n, tuple.child.totals)
+			}
+
+			fmt.Printf("RobustMoves=%v\n", root.RobustMoves(rootIdx))
+			fmt.Printf("MinMaxMove=%v\n", root.MinMaxMove(rootIdx))
+
+			require.Equal(t, test.Exp, root.RobustSafeMove(rootIdx))
+
+			if !strings.Contains(t.Name(), "-021") && !strings.Contains(t.Name(), "-027") {
 				require.Equal(t, test.Exp, root.MinMaxMove(rootIdx))
+				require.Equal(t, test.Exp, root.RobustMoves(rootIdx)[0])
 			}
 		})
 	}

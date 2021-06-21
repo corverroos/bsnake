@@ -2,7 +2,6 @@ package mcts
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -85,6 +84,10 @@ func expansion(n *node, logd logd) (*node, error) {
 func playoutRandomRational(root, node *node) (map[int]float64, error) {
 	b := node.board
 	r := node.ruleset
+	maxcount := 30
+	if len(root.board.Snakes) == 1 {
+		maxcount = 100
+	}
 
 	randMoves := func(b *rules.BoardState) []rules.SnakeMove {
 		res := make([]rules.SnakeMove, len(b.Snakes))
@@ -128,7 +131,7 @@ func playoutRandomRational(root, node *node) (map[int]float64, error) {
 			return nil, err
 		}
 
-		if count < 25 && !over {
+		if count < maxcount && !over {
 			continue
 		}
 
@@ -155,7 +158,7 @@ func playoutRandomRational(root, node *node) (map[int]float64, error) {
 func assignLenRewards(res map[int]float64, start, end map[int]int) {
 	if len(start) == 1 {
 		for i := range start {
-			res[i] = -0.1 * float64(end[i]-start[i])
+			res[i] = -0.1 * math.Min(float64(end[i]-start[i]), 8)
 			return
 		}
 	}
@@ -260,8 +263,6 @@ func selection(root *node, logd logd) *node {
 		}
 
 		if next == nil {
-			fmt.Printf("JCR: maxMoves=%v\n", maxMoves)
-			fmt.Printf("JCR: n.childs=%v\n", n.childs)
 			panic("missing child")
 		}
 		n = next
@@ -301,12 +302,12 @@ func genMoveSet(board *rules.BoardState) []map[int]string {
 			if !isRationalMove(board, i, move) {
 				// Skip unless it will result in 0 moves
 				if len(temp) > 0 || mi < 3 {
-					// fmt.Printf("JCR: skipping irrational move=%v, snake=%d\n", move, i)
+					// fmt.Printf("skipping irrational move=%v, snake=%d\n", move, i)
 					continue
 				}
-				// fmt.Printf("JCR: adding irrational move=%v, snake=%d\n", move, i)
+				// fmt.Printf("adding irrational move=%v, snake=%d\n", move, i)
 			} // else {
-			// fmt.Printf("JCR: adding ratinonal move=%v, snake=%d\n", move, i)
+			// fmt.Printf("adding ratinonal move=%v, snake=%d\n", move, i)
 			//}
 
 			for _, prev := range res {
@@ -343,13 +344,24 @@ func isRationalMove(board *rules.BoardState, snakeIdx int, move string) bool {
 	return true
 }
 
-func SelectMove(ctx context.Context, board *rules.BoardState, rootIDx int) (string, error) {
+func SelectMove(ctx context.Context, board *rules.BoardState, hazards []rules.Point, rootIDx int) (string, error) {
 	t0 := time.Now()
 
-	var ruleset rules.Ruleset = &rules.StandardRuleset{}
+	standard := rules.StandardRuleset{
+		//FoodSpawnChance: 15,
+		//MinimumFood:     1,
+	}
+
+	var ruleset rules.Ruleset = &standard
 
 	if len(board.Snakes) == 1 {
 		ruleset = &rules.SoloRuleset{}
+	}
+	if len(hazards) > 0 {
+		ruleset = &RoyaleRuleset{
+			StandardRuleset: standard,
+			Hazards:         hazards,
+		}
 	}
 
 	root := NewRoot(ruleset, board, rootIDx)
@@ -360,11 +372,11 @@ func SelectMove(ctx context.Context, board *rules.BoardState, rootIDx int) (stri
 			return "", err
 		}
 
-		if time.Since(t0) < time.Millisecond*300 {
+		if time.Since(t0) < time.Millisecond*340 {
 			continue
 		}
 
-		return root.RobustMove(rootIDx), nil
+		return root.RobustSafeMove(rootIDx), nil
 	}
 }
 
