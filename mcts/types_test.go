@@ -97,6 +97,53 @@ func Test500Once(t *testing.T) {
 	}
 }
 
+func TestVoronoi(t *testing.T) {
+	tests := []struct {
+		Name string
+		Exp1 map[int]int
+		Exp2 map[int]float64
+	}{
+		{
+			Name: "../testdata/input-001.json",
+			Exp1: map[int]int{0: 58},
+			Exp2: map[int]float64{},
+		},
+		{
+			Name: "../testdata/input-022.json",
+			Exp1: map[int]int{0: 14, 1: 86, 2: 46},
+			Exp2: map[int]float64{0: -0.20205479452054795, 1: 0.04452054794520549, 2: -0.09246575342465754},
+		},
+		{
+			Name: "../testdata/input-025.json",
+			Exp1: map[int]int{0: 110, 1: 36},
+			Exp2: map[int]float64{0: 0.1267123287671233, 1: -0.1267123287671233},
+		},
+		{
+			Name: "../testdata/input-027.json",
+			Exp1: map[int]int{0: 71, 1: 75},
+			Exp2: map[int]float64{0: -0.00684931506849315, 1: 0.006849315068493178},
+		},
+		{
+			Name: "../testdata/input-020.json",
+			Exp1: map[int]int{0: 18, 1: 40},
+			Exp2: map[int]float64{0: -0.09482758620689655, 1: 0.09482758620689657},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			board, rootIdx := fileToBoard(t, test.Name)
+			fmt.Printf("rootIdx=%v\n", rootIdx)
+			res := SumVoronoi(board)
+			require.EqualValues(t, test.Exp1, res)
+
+			res2 := make(map[int]float64)
+			assignAreaReqards(res2, board)
+			require.EqualValues(t, test.Exp2, res2)
+		})
+	}
+}
+
 func TestLen(t *testing.T) {
 	res := make(map[int]float64)
 	assignLenRewards(res, map[int]int{0: 0}, map[int]int{0: 2})

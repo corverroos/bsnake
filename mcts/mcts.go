@@ -151,8 +151,74 @@ func playoutRandomRational(root, node *node) (map[int]float64, error) {
 			endLens[i] = len(b.Snakes[i].Body)
 		}
 		assignLenRewards(res, startLens, endLens)
+		//assignAreaReqards(res, b)
 		return res, nil
 	}
+}
+
+func assignAreaReqards(res map[int]float64, b *rules.BoardState) {
+	if len(b.Snakes) == 1 {
+		return
+	}
+
+	sums := SumVoronoi(b)
+
+	var total float64
+	for _, v := range sums {
+		total += float64(v)
+	}
+
+	avail := 0.5
+	for i, v := range sums {
+		res[i] = (avail * float64(v) / total) - avail/2
+	}
+}
+
+func SumVoronoi(b *rules.BoardState) map[int]int {
+	res := make(map[int]int)
+	ycmin := b.Height / 3
+	xcmin := b.Width / 3
+	ycmax := b.Height - ycmin
+	xcmax := b.Width - xcmin
+
+	for x := int32(0); x < b.Width; x++ {
+		for y := int32(0); y < b.Height; y++ {
+			minDist := b.Width * b.Height
+			var minS int
+			for s := 0; s < len(b.Snakes); s++ {
+				for i, c := range b.Snakes[s].Body {
+					if i > len(b.Snakes[s].Body)*3*2 {
+						// Only consider first 2/3 of snake
+						break
+					}
+
+					distX := c.X - x
+					distY := c.Y - y
+					if distX < 0 {
+						distX = -distX
+					}
+					if distY < 0 {
+						distY = -distY
+					}
+					dist := distX + distY
+					if dist < minDist {
+						minDist = dist
+						minS = s
+					}
+					if dist == 0 {
+						break
+					}
+				}
+			}
+			res[minS]++
+
+			if y >= ycmin && y < ycmax && x >= xcmin && x < xcmax {
+				// Double points for controlling the centre
+				res[minS]++
+			}
+		}
+	}
+	return res
 }
 
 func assignLenRewards(res map[int]float64, start, end map[int]int) {
