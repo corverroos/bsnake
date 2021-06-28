@@ -3,8 +3,9 @@ package main
 import (
 	"fmt"
 	"math"
-	"math/rand"
 	"strings"
+
+	"github.com/BattlesnakeOfficial/rules"
 )
 
 type Game struct {
@@ -60,11 +61,12 @@ type Board struct {
 }
 
 type BattlesnakeInfoResponse struct {
-	APIVersion string `json:"apiversion"`
-	Author     string `json:"author"`
-	Color      string `json:"color"`
-	Head       string `json:"head"`
-	Tail       string `json:"tail"`
+	APIVersion string      `json:"apiversion"`
+	Author     string      `json:"author"`
+	Color      string      `json:"color"`
+	Head       string      `json:"head"`
+	Tail       string      `json:"tail"`
+	Meta       interface{} `json:"meta"`
 }
 
 type GameRequest struct {
@@ -104,17 +106,6 @@ func (m Move) String() string {
 }
 
 var Moves = []Move{Up, Down, Right, Left}
-
-func RandMoves() []Move {
-	var res []Move
-	for _, move := range Moves {
-		res = append(res, move)
-	}
-	rand.Shuffle(len(res), func(i, j int) {
-		res[i], res[j] = res[j], res[i]
-	})
-	return res
-}
 
 type Area map[Coord]int
 
@@ -193,4 +184,40 @@ func (a Area) Viz() string {
 		sl = append([]string{string(row)}, sl...)
 	}
 	return strings.Join(sl, "\n")
+}
+
+func gameReqToBoard(req GameRequest) (*rules.BoardState, int) {
+	var snakes []rules.Snake
+	var youIDx int
+	for i, snake := range req.Board.Snakes {
+		id := snake.ID
+		if id == "" {
+			id = snake.Name
+		}
+		snakes = append(snakes, rules.Snake{
+			ID:     id,
+			Body:   coordsToPoints(snake.Body),
+			Health: int32(snake.Health),
+		})
+		if req.You.ID == snake.ID {
+			youIDx = i
+		}
+	}
+
+	return &rules.BoardState{
+		Height: int32(req.Board.Height),
+		Width:  int32(req.Board.Width),
+		Food:   coordsToPoints(req.Board.Food),
+		Snakes: snakes,
+	}, youIDx
+}
+
+func coordsToPoints(cl []Coord) (res []rules.Point) {
+	for _, c := range cl {
+		res = append(res, rules.Point{
+			X: int32(c.X),
+			Y: int32(c.Y),
+		})
+	}
+	return res
 }

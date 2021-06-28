@@ -3,12 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"os"
 	"os/exec"
 	"os/signal"
+	"sort"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/corverroos/bsrules/cli/commands"
 )
 
 func main() {
@@ -18,15 +22,19 @@ func main() {
 	sl := []server{
 		{
 			Port:   8082,
-			Snakes: []string{"boomboom"},
-		}, {
-			Port:   8083,
+			Snakes: []string{"v3", "v2", "v1","mx3"},
+		},
+		{
 			Ref:    1,
-			Snakes: []string{"boomboom", "basic"},
+			Port:   8083,
+			Snakes: []string{"boomboom"},
 		},
 	}
 
-	opts := options{Total: 50}
+	opts := options{
+		Total:   50,
+		Players: 3,
+	}
 
 	res, err := run(ctx, opts, sl...)
 	if err != nil {
@@ -37,7 +45,8 @@ func main() {
 }
 
 type options struct {
-	Total int
+	Total   int
+	Players int
 }
 
 type server struct {
@@ -54,13 +63,16 @@ func run(ctx context.Context, opt options, sl ...server) (result, error) {
 	exec.Command("pkill", "bsnake").Run()
 
 	for i, s := range sl {
-		branch := "main"
-		if s.Ref > 0 {
-			branch = fmt.Sprintf("main^%d", s.Ref)
-		}
-		out, err := exec.Command("git", "checkout", branch).CombinedOutput()
-		if err != nil {
-			return result{}, fmt.Errorf("gco %v: %s", err, out)
+		if len(sl) > 1 {
+			branch := "main"
+			if s.Ref > 0 {
+				branch = fmt.Sprintf("main^%d", s.Ref)
+			}
+
+			out, err := exec.Command("git", "checkout", branch).CombinedOutput()
+			if err != nil {
+				return result{}, fmt.Errorf("gco %v: %s", err, out)
+			}
 		}
 
 		cmd := exec.CommandContext(ctx, "go", "run", "github.com/corverroos/bsnake")
@@ -69,59 +81,110 @@ func run(ctx context.Context, opt options, sl ...server) (result, error) {
 		go func(cmd *exec.Cmd) {
 			fmt.Printf("Starting server %s\n", cmd.String())
 			out, err := cmd.CombinedOutput()
-			if err != nil {
+			if ctx.Err() == nil && err != nil {
 				fmt.Printf("server error %d: %s", i, out)
 			}
 		}(cmd)
+
 		time.Sleep(time.Second)
 
-		_, err = exec.Command("git", "checkout", "main").CombinedOutput()
-		if err != nil {
-			return result{}, fmt.Errorf("gco %v: %s", err, out)
+		if len(sl) > 1 {
+			out, err := exec.Command("git", "checkout", "main").CombinedOutput()
+			if err != nil {
+				return result{}, fmt.Errorf("gco %v: %s", err, out)
+			}
 		}
 	}
 
-	results := make(map[string]int)
-
+	wins := make(map[string]map[string]int)
+	losses := make(map[string]map[string]int)
+	plays := make(map[string]int)
+	draws := make(map[string]int)
 	for i := 0; i < opt.Total; i++ {
-		args := []string{"play", "-W", "11", "-H", "11"}
-		for _, s := range sl {
-			for _, snake := range s.Snakes {
-				args = append(args, "--name", nameSnake(s, snake))
-				args = append(args, "--url", fmt.Sprintf("http://localhost:%d/%s/", s.Port, snake))
-			}
-		}
-		cmd := exec.CommandContext(ctx, "battlesnake", args...)
-		fmt.Printf("Running game %d %s\n", i, cmd.String())
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			return result{}, fmt.Errorf("game error %v: %s", err, out)
+		if ctx.Err() != nil {
+			break
 		}
 
-		for _, line := range strings.Split(string(out), "\n") {
-			if !strings.Contains(line, "Game completed after") {
-				continue
+		func(i int) {
+			var logs []string
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Printf("Panic: %v", r)
+					fmt.Print(strings.Join(logs, "\n"))
+				}
+			}()
+
+			game := []string{"standard", "royale"}[i%2]
+
+			o := &commands.Options{
+				Width:    11,
+				Height:   11,
+				GameType: game,
+				Seed:     int64(i),
+				Log: func(s string, i ...interface{}) {
+					logs = append(logs, fmt.Sprintf(s, i...))
+				},
 			}
-			suffix := strings.Split(line, "turns. ")
-			if len(suffix) != 2 {
-				fmt.Printf("Game no winner %d: %s", i, line)
-				break
+
+			for _, s := range sl {
+				for _, snake := range s.Snakes {
+					o.Names = append(o.Names, nameSnake(s, len(sl), snake))
+					o.URLs = append(o.URLs, fmt.Sprintf("http://localhost:%d/%s/", s.Port, snake))
+				}
 			}
-			winner := strings.TrimSpace(strings.TrimSuffix(suffix[1], " is the winner."))
-			if strings.Contains(winner, " ") {
-				fmt.Printf("Game no winner %d: %s", i, line)
-				break
+
+			for opt.Players > 0 && len(o.Names) > opt.Players {
+				drop := rand.Intn(len(o.Names))
+				o.Names = append(o.Names[0:drop], o.Names[drop+1:]...)
+				o.URLs = append(o.URLs[0:drop], o.URLs[drop+1:]...)
 			}
-			results[winner]++
-			fmt.Printf("Winner %s\n", winner)
-		}
+
+			t0 := time.Now()
+			res := commands.Run(o)
+
+			for snake, info := range res.Infos {
+				if _, ok := plays[snake]; !ok {
+					wins[snake] = make(map[string]int)
+					losses[snake] = make(map[string]int)
+					fmt.Printf("Infos %s: %v\n", snake, info)
+				}
+				plays[snake]++
+
+				if res.Winner == "" {
+					draws[snake]++
+				} else {
+					for other := range res.Infos {
+						if other == snake && snake == res.Winner {
+							wins[snake]["total"]++
+						} else if other == snake && snake != res.Winner {
+							losses[snake]["total"]++
+						} else if snake == res.Winner {
+							wins[snake][other]++
+						} else if other == res.Winner {
+							losses[snake][other]++
+						}
+					}
+				}
+			}
+
+			var msg []string
+			for s, p := range plays {
+				msg = append(msg, fmt.Sprintf("%s p=%d\tw=%v\tl=%v", s, p, wins[s], losses[s]))
+			}
+			sort.Strings(msg)
+
+			fmt.Printf("Results\t[winner=%s, turns=%d, game=%s, duration=%.0fs]\n\t%s\n", res.Winner, res.Turn, game, time.Since(t0).Seconds(), strings.Join(msg, "\n\t"))
+		}(i)
 	}
 
 	return result{
-		Wins: results,
+		//Wins: wins,
 	}, nil
 }
 
-func nameSnake(srv server, path string) string {
+func nameSnake(srv server, sl int, path string) string {
+	if sl == 1 {
+		return path
+	}
 	return fmt.Sprintf("%d_%s", srv.Ref, path)
 }

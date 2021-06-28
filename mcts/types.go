@@ -2,24 +2,13 @@ package mcts
 
 import (
 	"math"
-	"math/rand"
 	"sort"
 
 	"github.com/BattlesnakeOfficial/rules"
+
+	"github.com/corverroos/bsnake/board"
+	"github.com/corverroos/bsnake/heur"
 )
-
-var Moves = []string{"up", "down", "right", "left"}
-
-func RandMoves() []string {
-	var res []string
-	for _, move := range Moves {
-		res = append(res, move)
-	}
-	rand.Shuffle(len(res), func(i, j int) {
-		res[i], res[j] = res[j], res[i]
-	})
-	return res
-}
 
 type edge int32
 
@@ -99,16 +88,18 @@ type node struct {
 	childs    []tuple
 	lastMoves map[int]string
 
-	n      float64
-	totals map[int]float64
+	n            float64
+	totals       map[int]float64
+	totalSquares map[int]float64
 
 	termTotals map[int]float64
+	heurTotals map[int]float64
 }
 
 func (n *node) MinMaxMove(idx int) string {
 	mins := make(map[string]float64)
 	for _, tuple := range n.childs {
-		for _, move := range Moves {
+		for _, move := range board.Moves {
 			if tuple.edge.Is(idx, move) {
 				avg := tuple.child.AvgScore(idx)
 				min, ok := mins[move]
@@ -168,10 +159,10 @@ func (n *node) RobustMoves(idx int) []string {
 		V float64
 	}
 
-	totals := make([]tup, len(Moves))
+	totals := make([]tup, len(board.Moves))
 
 	for _, tuple := range n.childs {
-		for i, move := range Moves {
+		for i, move := range board.Moves {
 			if tuple.edge.Is(idx, move) {
 				totals[i].K = move
 				totals[i].V += tuple.child.n
@@ -196,10 +187,12 @@ func (n *node) RobustMoves(idx int) []string {
 func (n *node) UpdateScores(s map[int]float64) {
 	if n.totals == nil {
 		n.totals = make(map[int]float64)
+		n.totalSquares = make(map[int]float64)
 	}
 	n.n++
 	for i, t := range s {
 		n.totals[i] += t
+		n.totalSquares[i] += t * t
 	}
 }
 
@@ -243,6 +236,21 @@ func (n *node) AvgScore(snakeIDx int) float64 {
 	return n.totals[snakeIDx] / n.n
 }
 
+func (n *node) ScoreVariance(snakeIDx int) float64 {
+	if n.n <= 0 {
+		return 0
+	}
+	return (n.totalSquares[snakeIDx] - (n.totals[snakeIDx]*n.totals[snakeIDx])/n.n) / (n.n - 1)
+}
+
+func (n *node) Size() int {
+	var sum int
+	for i := 0; i < len(n.childs); i++ {
+		sum += n.childs[i].child.Size()
+	}
+	return 1 + sum
+}
+
 func (n *node) UCB1(snakeIDx int) (float64, bool) {
 	if n.n == 0 {
 		return 0, true
@@ -251,14 +259,14 @@ func (n *node) UCB1(snakeIDx int) (float64, bool) {
 	return n.AvgScore(snakeIDx) + math.Sqrt(2)*math.Sqrt(math.Log(n.parent.n)/n.n), false
 }
 
-func (n *node) GenChild(moves map[int]string) (*node, error) {
+func genChild(n *node, moves map[int]string) (tuple, error) {
 	if _, ok := moves[n.rootIdx]; !ok {
 		panic("missing root idx")
 	}
 
 	e := newEdge(moves)
 
-	var ml []rules.SnakeMove
+	ml := make([]rules.SnakeMove, 0, len(moves))
 	for idx, move := range moves {
 		ml = append(ml, rules.SnakeMove{
 			ID:   n.idsByIdx[idx],
@@ -268,22 +276,34 @@ func (n *node) GenChild(moves map[int]string) (*node, error) {
 
 	board, err := n.ruleset.CreateNextBoardState(n.board, ml)
 	if err != nil {
-		return nil, err
+		return tuple{}, err
 	}
 
 	child := &node{
-		ruleset:   n.ruleset,
-		idsByIdx:  n.idsByIdx,
-		rootIdx:   n.rootIdx,
-		board:     board,
-		depth:     n.depth + 1,
-		lastMoves: moves,
-		parent:    n,
-		totals:    make(map[int]float64),
+		ruleset:      n.ruleset,
+		idsByIdx:     n.idsByIdx,
+		rootIdx:      n.rootIdx,
+		board:        board,
+		depth:        n.depth + 1,
+		lastMoves:    moves,
+		parent:       n,
+		childs:       make([]tuple, 0, 64),
+		totals:       make(map[int]float64),
+		totalSquares: make(map[int]float64),
 	}
-	n.childs = append(n.childs, tuple{edge: e, child: child})
 
-	return child, nil
+	return tuple{edge: e, child: child}, nil
+}
+
+func (n *node) AppendChild(moves map[int]string) (*node, error) {
+	tup, err := genChild(n, moves)
+	if err != nil {
+		return nil, err
+	}
+
+	n.childs = append(n.childs, tup)
+
+	return tup.child, nil
 }
 
 func NewRoot(ruleset rules.Ruleset, board *rules.BoardState, rootIdx int) *node {
@@ -292,11 +312,77 @@ func NewRoot(ruleset rules.Ruleset, board *rules.BoardState, rootIdx int) *node 
 		idsByIdx[idx] = snake.ID
 	}
 	return &node{
-		ruleset:  ruleset,
-		idsByIdx: idsByIdx,
-		rootIdx:  rootIdx,
-		board:    board,
-		n:        1,
-		totals:   make(map[int]float64),
+		ruleset:      ruleset,
+		idsByIdx:     idsByIdx,
+		rootIdx:      rootIdx,
+		board:        board,
+		n:            1,
+		childs:       make([]tuple, 0, 64),
+		totals:       make(map[int]float64),
+		totalSquares: make(map[int]float64),
 	}
+}
+
+var (
+	// Basic MCTS with RobustSafe move
+	OptsV1 = Opts{
+		Version:      1,
+		UCB1_C:       4,
+		MaxPlayout:   30,
+		SelectRandom: 20,
+	}
+
+	// Basic MCTS with RobustSafe move, big C.
+	OptsV2 = Opts{
+		Tuned:        true,
+		Version:      1, // 2
+		UCB1_C:       4, // 2
+		MaxPlayout:   30,
+		SelectRandom: 20,
+	}
+	// Basic MCTS with RobustSafe move, big C.
+	OptsV3 = Opts{
+		Tuned:          true,
+		Version:        1, // 2
+		UCB1_C:         4, // 2
+		MaxPlayout:     15, // 30
+		SelectRandom:   10, // 20
+		PlayoutMaxHeur: true,
+		HeurFactors: &heur.Factors{
+			Control: 0.05,
+			Length:  0.35,
+			Hunger:  -0.001,
+			Starve:  -0.9,
+		},
+	}
+)
+
+type Opts struct {
+	Version        int
+	UCB1_C         float64
+	MaxPlayout     int
+	SelectRandom   float64 // Number of first visits to a node to use random selection.
+	SelectHeur     bool    // Use heuristics during select (progressive bias)
+	HeurFactors    *heur.Factors
+	GreedyProb     float64
+	GreedyHeur     func(*rules.BoardState, int) string        `json:"-"`
+	logd           func(string, ...interface{})               `json:"-"`
+	logr           func(root *node, rootIdx int, move string) `json:"-"`
+	Tuned          bool
+	PlayoutMaxHeur bool
+	hazards        map[rules.Point]bool
+}
+
+func (o *Opts) Logd(msg string, args ...interface{}) {
+	if o.logd == nil {
+		return
+	}
+	o.logd(msg, args...)
+}
+
+func (o *Opts) LogResults(root *node, rootIdx int, move string) {
+	if o.logr == nil {
+		return
+	}
+	o.logr(root, rootIdx, move)
 }

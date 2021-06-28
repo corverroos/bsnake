@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/julienschmidt/httprouter"
 	"io"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 // HandleIndex is called when your Battlesnake is created and refreshed
@@ -109,7 +110,7 @@ func HandleMove(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	if fmt.Sprint(req.You.Latency) == "0" {
 		timeout = " TIMEOUT!"
 	}
-	log.Printf("Move: %d %v [%vus %sms%s]\n", req.Turn, m, time.Since(t0).Microseconds(), req.You.Latency, timeout)
+	log.Printf("Move %s: %d %v [%vus %sms%s]\n", name, req.Turn, m, time.Since(t0).Microseconds(), req.You.Latency, timeout)
 }
 
 // HandleEnd is called when a game your Battlesnake was playing has ended.

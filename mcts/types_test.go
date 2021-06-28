@@ -11,6 +11,8 @@ import (
 	"github.com/BattlesnakeOfficial/rules"
 	"github.com/luno/jettison/jtest"
 	"github.com/stretchr/testify/require"
+
+	"github.com/corverroos/bsnake/board"
 )
 
 func Test500Once(t *testing.T) {
@@ -52,7 +54,7 @@ func Test500Once(t *testing.T) {
 		},
 		{
 			Name: "../testdata/input-027.json",
-			Exp:  "down",
+			Exp:  "right",
 		},
 		{
 			Name: "../testdata/input-028.json",
@@ -69,32 +71,63 @@ func Test500Once(t *testing.T) {
 				rulset = &rules.SoloRuleset{}
 			}
 
+			// V3 : totals=map[expansion:447.687227ms playout:2.987921459s selection:1.105010259s]
+			// V2 : totals=map[expansion:481.324695ms playout:2.397827728s selection:1.186210448s]
+			opts := &OptsV3
+			opts.logd = func(s string, i ...interface{}) {
+				//fmt.Printf(s+"\n", i...)
+			}
+			opts.logr = func(root *node, rootIdx int, move string) {
+				s := sampleStats(graphDepths(root))
+				fmt.Printf("graph: nodes=%.0f maxd=%.0f avgd=%.0f stddev=%.0f\n", s.count, s.max, s.mean, s.stddev)
+				var longest string
+				n := root
+				for len(n.childs) > 0 {
+					var next tuple
+					for i, tup := range n.childs {
+						if i == 0 || next.child.n < tup.child.n {
+							next = tup
+						}
+					}
+					longest += fmt.Sprintf("%s(%.0f) ", next.edge, next.child.n)
+					n = next.child
+				}
+				fmt.Println(longest)
+			}
+
 			root := NewRoot(rulset, board, rootIdx)
 			fmt.Printf("rootIdx=%v\n", rootIdx)
 			for i := 0; i < 10000; i++ {
 				rand.Seed(int64(i))
-				err := Once(root, func(s string, i ...interface{}) {
-					//fmt.Printf(s+"\n", i...)
-				})
+				err := Once(root, opts)
 				jtest.RequireNil(t, err)
 				require.Equal(t, float64(i+2), root.n)
 			}
 
 			for _, tuple := range root.childs {
-				fmt.Printf("edge=%v visits=%v totals=%v\n", tuple.edge, tuple.child.n, tuple.child.totals)
+				avgs := map[int]float64{}
+				for i := 0; i < len(root.idsByIdx); i++ {
+					avgs[i] = tuple.child.AvgScore(i)
+				}
+				fmt.Printf("edge=%v visits=%v avgs=%v\n", tuple.edge, tuple.child.n, avgs)
 			}
 
 			fmt.Printf("RobustMoves=%v\n", root.RobustMoves(rootIdx))
 			fmt.Printf("MinMaxMove=%v\n", root.MinMaxMove(rootIdx))
 
-			require.Equal(t, test.Exp, root.RobustSafeMove(rootIdx))
+			//require.Equal(t, test.Exp, root.RobustSafeMove(rootIdx))
+
+			opts.logr(root, rootIdx, "")
 
 			if !strings.Contains(t.Name(), "-021") && !strings.Contains(t.Name(), "-027") {
-				require.Equal(t, test.Exp, root.MinMaxMove(rootIdx))
-				require.Equal(t, test.Exp, root.RobustMoves(rootIdx)[0])
+				//require.Equal(t, test.Exp, root.MinMaxMove(rootIdx))
+				//require.Equal(t, test.Exp, root.RobustMoves(rootIdx)[0])
 			}
+
 		})
 	}
+
+	//fmt.Printf("JCR: totals=%v\n", totals)
 }
 
 func TestVoronoi(t *testing.T) {
@@ -146,8 +179,14 @@ func TestVoronoi(t *testing.T) {
 
 func TestLen(t *testing.T) {
 	res := make(map[int]float64)
-	assignLenRewards(res, map[int]int{0: 0}, map[int]int{0: 2})
-	require.Equal(t, -0.4, res[0])
+	assignLenRewards(&Opts{}, res, map[int]int{0: 0, 1: 0}, map[int]int{0: 2, 1: 0})
+	require.Equal(t, 0.1, res[0])
+	require.Equal(t, -0.1, res[1])
+
+	res = make(map[int]float64)
+	assignLenRewards(&Opts{Version: 3}, res, map[int]int{0: 0, 1: 0}, map[int]int{0: 2, 1: 0})
+	require.Equal(t, 0.8, res[0])
+	require.Equal(t, -0.3, res[1])
 }
 
 //func TestAssignLenTups(t *testing.T) {
@@ -216,9 +255,9 @@ func TestGenMoves(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			board, _ := fileToBoard(t, test.Name)
+			b, _ := fileToBoard(t, test.Name)
 
-			totals := genMoveSet(board)
+			totals := board.GenMoveSet(b)
 			require.EqualValues(t, test.Exp, totals)
 		})
 	}
@@ -231,10 +270,10 @@ func TestPlayoutRational(t *testing.T) {
 	}{
 		{
 			Name: "../testdata/input-021.json",
-			Exp:  map[int]float64{0: -1, 1: 1},
+			Exp:  map[int]float64{0: 1, 1: -1},
 		}, {
 			Name: "../testdata/input-022.json",
-			Exp:  map[int]float64{0: 0, 1: -1, 2: 0},
+			Exp:  map[int]float64{0: -1, 1: 1, 2: -1},
 		},
 	}
 
@@ -244,11 +283,25 @@ func TestPlayoutRational(t *testing.T) {
 			n0 := NewRoot(&rules.StandardRuleset{}, board, rootIdx)
 
 			rand.Seed(0)
-			totals, err := playoutRandomRational(n0, n0)
+			totals, err := playoutRandomRational(n0, n0, &OptsV1)
 			jtest.RequireNil(t, err)
 			require.EqualValues(t, test.Exp, totals)
 		})
 	}
+}
+
+func TestVariance(t *testing.T) {
+	n := &node{}
+	for _, f := range []float64{4, 7, 13, 16} {
+		n.UpdateScores(map[int]float64{0: f})
+	}
+	require.Equal(t, 30.0, n.ScoreVariance(0))
+
+	n = &node{}
+	for _, f := range []float64{1, 2, 2, 4, 6} {
+		n.UpdateScores(map[int]float64{0: f})
+	}
+	require.Equal(t, 4.0, n.ScoreVariance(0))
 }
 
 func TestChildMoves(t *testing.T) {
@@ -259,7 +312,7 @@ func TestChildMoves(t *testing.T) {
 	require.Zero(t, n0.AvgScore(rootIdx))
 
 	moves := map[int]string{0: "left", 1: "right", 2: "down"}
-	n1, err := n0.GenChild(moves)
+	n1, err := n0.AppendChild(moves)
 	jtest.RequireNil(t, err)
 
 	require.Len(t, n0.childs, 1)

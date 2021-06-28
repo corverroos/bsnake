@@ -3,18 +3,24 @@ package main
 import (
 	"context"
 
+	"github.com/BattlesnakeOfficial/rules"
+
+	"github.com/corverroos/bsnake/heur"
 	"github.com/corverroos/bsnake/mcts"
 )
 
 type snake struct {
-	Info  BattlesnakeInfoResponse
-	Start func(ctx context.Context, req GameRequest) error
-	End   func(ctx context.Context, req GameRequest) error
-	Move  func(ctx context.Context, req GameRequest) (string, error)
+	Alias       string
+	Description string
+	Info        BattlesnakeInfoResponse
+	Start       func(ctx context.Context, req GameRequest) error
+	End         func(ctx context.Context, req GameRequest) error
+	Move        func(ctx context.Context, req GameRequest) (string, error)
 }
 
 var snakes = map[string]snake{
-	"basic": {
+	"v0": {
+		Description: "First snake, just weighted next move heuristic",
 		Info: BattlesnakeInfoResponse{
 			APIVersion: "1",
 			Author:     "corverroos",
@@ -28,44 +34,131 @@ var snakes = map[string]snake{
 			return selectMove(ctx, req, basicWeights)
 		},
 	},
-	"ball": {
+	"mx0": {
+		Description: "Minimax 2-ply",
 		Info: BattlesnakeInfoResponse{
 			APIVersion: "1",
-			Author:     "corverroos",
-			Color:      "#00264d",
-			Head:       "bendr",
-			Tail:       "freckled",
+			Meta:       fmx0,
 		},
-		Start: nil,
-		End:   nil,
 		Move: func(ctx context.Context, req GameRequest) (string, error) {
-			return selectMove(ctx, req, ballWeights)
+			board, rootIdx := gameReqToBoard(req)
+			return mcts.SelectMinimax(board, coordsToPoints(req.Board.Hazards), rootIdx, fmx0, mxDepth(board))
 		},
 	},
-	"monty": {
+	"mx1": {
+		Description: "Minimax 4-ply",
 		Info: BattlesnakeInfoResponse{
 			APIVersion: "1",
-			Author:     "corverroos",
+			Meta:       fmx1,
 		},
-		Start: nil,
-		End:   nil,
 		Move: func(ctx context.Context, req GameRequest) (string, error) {
-			return selectMCTS(ctx, req, basicWeights)
+			board, rootIdx := gameReqToBoard(req)
+			return mcts.SelectMinimax(board, coordsToPoints(req.Board.Hazards), rootIdx, fmx1, mxDepth(board))
 		},
 	},
-	"boomboom": {
+	"mx2": {
+		Description: "Minimax 4-ply",
+		Info: BattlesnakeInfoResponse{
+			APIVersion: "1",
+			Meta:       fmx2,
+		},
+		Move: func(ctx context.Context, req GameRequest) (string, error) {
+			board, rootIdx := gameReqToBoard(req)
+			return mcts.SelectMinimax(board, coordsToPoints(req.Board.Hazards), rootIdx, fmx2, mxDepth(board))
+		},
+	},
+	"mx3": {
+		Description: "Minimax 4-ply",
+		Info: BattlesnakeInfoResponse{
+			APIVersion: "1",
+			Meta:       fmx3,
+		},
+		Move: func(ctx context.Context, req GameRequest) (string, error) {
+			board, rootIdx := gameReqToBoard(req)
+			return mcts.SelectMinimax(board, coordsToPoints(req.Board.Hazards), rootIdx, fmx3, mxDepth(board))
+		},
+	},
+	"v1": {
+		Description: "MCTS with multiplayer, simultaneous move, Decoupled-UCT, rational-playouts",
 		Info: BattlesnakeInfoResponse{
 			APIVersion: "1",
 			Author:     "corverroos",
 			Color:      "#141452",
 			Head:       "viper",
 			Tail:       "rattle",
+			Meta:       mcts.OptsV1,
 		},
 		Move: func(ctx context.Context, req GameRequest) (string, error) {
 			board, rootIdx := gameReqToBoard(req)
-			return mcts.SelectMove(ctx, board, coordsToPoints(req.Board.Hazards), rootIdx)
+			return mcts.SelectMove(ctx, board, coordsToPoints(req.Board.Hazards), rootIdx, &mcts.OptsV1)
 		},
 	},
+	"v2": {
+		Description: "MCTS with multiplayer, simultaneous move, Decoupled-UCT, rational-playouts",
+		Info: BattlesnakeInfoResponse{
+			APIVersion: "1",
+			Author:     "corverroos",
+			Color:      "#141452",
+			Head:       "viper",
+			Tail:       "rattle",
+			Meta:       mcts.OptsV2,
+		},
+		Move: func(ctx context.Context, req GameRequest) (string, error) {
+			board, rootIdx := gameReqToBoard(req)
+			return mcts.SelectMove(ctx, board, coordsToPoints(req.Board.Hazards), rootIdx, &mcts.OptsV2)
+		},
+	},
+	"v3": {
+		Alias:       "latest",
+		Description: "MCTS with multiplayer, simultaneous move, Decoupled-UCT, rational-playouts",
+		Info: BattlesnakeInfoResponse{
+			APIVersion: "1",
+			Author:     "corverroos",
+			Color:      "#141452",
+			Head:       "viper",
+			Tail:       "rattle",
+			Meta:       mcts.OptsV3,
+		},
+		Move: func(ctx context.Context, req GameRequest) (string, error) {
+			board, rootIdx := gameReqToBoard(req)
+			return mcts.SelectMove(ctx, board, coordsToPoints(req.Board.Hazards), rootIdx, &mcts.OptsV3)
+		},
+	},
+}
+
+var (
+	fmx0 = heur.Factors{
+		Control: 0.01,
+		Length:  0.5,
+		Hunger:  -0.001,
+		Starve:  -0.9,
+	}
+	fmx1 = heur.Factors{
+		Control: 0.1,
+		Length:  0.3,
+		Hunger:  -0.02,
+		Starve:  -0.8,
+	}
+	fmx2 = heur.Factors{
+		Control: 0.1,
+		Length:  0.3,
+		Hunger:  -0.001,
+		Starve:  -0.9,
+	}
+	fmx3 = heur.Factors{
+		Control: 0.05,
+		Length:  0.35,
+		Hunger:  -0.001,
+		Starve:  -0.9,
+	}
+)
+
+func init() {
+	for _, s := range snakes {
+		if s.Alias != "" {
+			snakes[s.Alias] = s
+		}
+	}
 }
 
 const (
@@ -97,4 +190,25 @@ var ballWeights = weights{
 	H2HWin:       -100,
 	FoodFull:     -100,
 	HungryHealth: 10,
+}
+
+func mxDepth(b *rules.BoardState) int {
+	var l int
+	for i := 0; i < len(b.Snakes); i++ {
+		if b.Snakes[i].EliminatedCause == "" {
+			l++
+		}
+	}
+	switch l {
+	case 1:
+		return 10
+	case 2:
+		return 4
+	case 3:
+		return 2
+	case 4:
+		return 2
+	default:
+		return 1
+	}
 }
