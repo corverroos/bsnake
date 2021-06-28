@@ -78,6 +78,23 @@ var snakes = map[string]snake{
 			return mcts.SelectMinimax(board, coordsToPoints(req.Board.Hazards), rootIdx, fmx3, mxDepth(board))
 		},
 	},
+	"mx4": {
+		Description: "Minimax Tree Search",
+		Info: BattlesnakeInfoResponse{
+			APIVersion: "1",
+			Color: "#ccccff",
+			Head: "snow-worm",
+			Tail: "block-bum",
+			Meta: map[string]interface{}{
+				"heur": fmx3,
+				"opts": mcts.OptsV2,
+			},
+		},
+		Move: func(ctx context.Context, req GameRequest) (string, error) {
+			board, rootIdx := gameReqToBoard(req)
+			return mcts.SelectMx(board, coordsToPoints(req.Board.Hazards), rootIdx, fmx3, &mcts.OptsV2)
+		},
+	},
 	"v1": {
 		Description: "MCTS with multiplayer, simultaneous move, Decoupled-UCT, rational-playouts",
 		Info: BattlesnakeInfoResponse{
@@ -98,9 +115,9 @@ var snakes = map[string]snake{
 		Info: BattlesnakeInfoResponse{
 			APIVersion: "1",
 			Author:     "corverroos",
-			Color:      "#141452",
-			Head:       "viper",
-			Tail:       "rattle",
+			Color:      "#ff0066",
+			Head:       "silly",
+			Tail:       "rocket",
 			Meta:       mcts.OptsV2,
 		},
 		Move: func(ctx context.Context, req GameRequest) (string, error) {

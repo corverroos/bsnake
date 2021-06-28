@@ -290,6 +290,7 @@ func genChild(n *node, moves map[int]string) (tuple, error) {
 		childs:       make([]tuple, 0, 64),
 		totals:       make(map[int]float64),
 		totalSquares: make(map[int]float64),
+		heurTotals:   make(map[int]float64),
 	}
 
 	return tuple{edge: e, child: child}, nil
@@ -320,19 +321,28 @@ func NewRoot(ruleset rules.Ruleset, board *rules.BoardState, rootIdx int) *node 
 		childs:       make([]tuple, 0, 64),
 		totals:       make(map[int]float64),
 		totalSquares: make(map[int]float64),
+		heurTotals:   make(map[int]float64),
 	}
 }
 
 var (
 	// Basic MCTS with RobustSafe move
 	OptsV1 = Opts{
-		Version:      1,
+		Tuned:        true,
+		Version:      2,
 		UCB1_C:       4,
 		MaxPlayout:   30,
 		SelectRandom: 20,
 	}
 
+	// mx3 = 10/28.0 => 0.35714285714285715
+	// v1 = 5/27.0 => 0.18518518518518517
+	//
+	// boom = 16/33.0 => 0.48484848484848486
+	// v3 = 4/35.0 => 0.11428571428571428
+
 	// Basic MCTS with RobustSafe move, big C.
+	// Against boom: 15/27.0 => 0.5555555555555556
 	OptsV2 = Opts{
 		Tuned:        true,
 		Version:      1, // 2
@@ -343,8 +353,8 @@ var (
 	// Basic MCTS with RobustSafe move, big C.
 	OptsV3 = Opts{
 		Tuned:          true,
-		Version:        1, // 2
-		UCB1_C:         4, // 2
+		Version:        1,  // 2
+		UCB1_C:         4,  // 2
 		MaxPlayout:     15, // 30
 		SelectRandom:   10, // 20
 		PlayoutMaxHeur: true,

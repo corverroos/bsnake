@@ -22,10 +22,10 @@ func main() {
 	sl := []server{
 		{
 			Port:   8082,
-			Snakes: []string{"v3", "v2", "v1","mx3"},
+			Snakes: []string{"v2", "v1", "mx3", "mx4"},
 		},
 		{
-			Ref:    1,
+			Ref:    "e9de2a3c67548abc89fb59cea871ec02069ba26b",
 			Port:   8083,
 			Snakes: []string{"boomboom"},
 		},
@@ -33,7 +33,7 @@ func main() {
 
 	opts := options{
 		Total:   50,
-		Players: 3,
+		Players: 4,
 	}
 
 	res, err := run(ctx, opts, sl...)
@@ -50,7 +50,7 @@ type options struct {
 }
 
 type server struct {
-	Ref    int
+	Ref    string
 	Port   int
 	Snakes []string
 }
@@ -63,10 +63,10 @@ func run(ctx context.Context, opt options, sl ...server) (result, error) {
 	exec.Command("pkill", "bsnake").Run()
 
 	for i, s := range sl {
+		branch := "main"
 		if len(sl) > 1 {
-			branch := "main"
-			if s.Ref > 0 {
-				branch = fmt.Sprintf("main^%d", s.Ref)
+			if s.Ref != "" {
+				branch = s.Ref
 			}
 
 			out, err := exec.Command("git", "checkout", branch).CombinedOutput()
@@ -79,7 +79,7 @@ func run(ctx context.Context, opt options, sl ...server) (result, error) {
 		cmd.Dir = "/Users/corver/core/repos/bsnake"
 		cmd.Env = append([]string{fmt.Sprintf("BIND=localhost:%d", s.Port)}, os.Environ()...)
 		go func(cmd *exec.Cmd) {
-			fmt.Printf("Starting server %s\n", cmd.String())
+			fmt.Printf("Starting server %s on branch %v\n", cmd.String(), branch)
 			out, err := cmd.CombinedOutput()
 			if ctx.Err() == nil && err != nil {
 				fmt.Printf("server error %d: %s", i, out)
@@ -183,8 +183,8 @@ func run(ctx context.Context, opt options, sl ...server) (result, error) {
 }
 
 func nameSnake(srv server, sl int, path string) string {
-	if sl == 1 {
+	if sl == 1 || srv.Ref == "" {
 		return path
 	}
-	return fmt.Sprintf("%d_%s", srv.Ref, path)
+	return fmt.Sprintf("%s_%s", srv.Ref[:1], path)
 }
