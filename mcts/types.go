@@ -354,18 +354,20 @@ var (
 	}
 	// Basic MCTS with RobustSafe move, big C.
 	OptsV3 = Opts{
-		Tuned:          true,
-		Version:        1,  // 2
-		UCB1_C:         4,  // 2
-		MaxPlayout:     15, // 30
-		SelectRandom:   10, // 20
-		LeafPlayout:    true,
-		PlayoutMaxHeur: true,
+		Tuned:        true,
+		Version:      2,
+		UCB1_C:       4,
+		SelectRandom: 20,
+		LeafPlayout:  false,
+		LeafHeur:     true,
+		AvoidLH2H:    true,
 		HeurFactors: &heur.Factors{
 			Control: 0.05,
-			Length:  0.35,
+			Length:  0.4,
+			Boxed:   -0.5,
 			Hunger:  -0.001,
 			Starve:  -0.9,
+			Walls:   0.01,
 		},
 	}
 
@@ -373,7 +375,6 @@ var (
 		Tuned:        true,
 		Version:      2,
 		UCB1_C:       4,
-		MaxPlayout:   30,
 		SelectRandom: 20,
 		LeafPlayout:  false,
 		LeafHeur:     true,
@@ -384,6 +385,26 @@ var (
 			Starve:  -0.9,
 		},
 	}
+
+	OptsV5 = Opts{
+		Tuned:        true,
+		Version:      2,
+		UCB1_C:       4,
+		SelectRandom: 20,
+		LeafPlayout:  false,
+		LeafHeur:     true,
+		HeurFactors: &heur.Factors{
+			Control: 0.05,
+			Length:  0.4,
+			Boxed:   -0.5,
+			Hunger:  -0.001,
+			Starve:  -0.9,
+		},
+	}
+
+	//        v3 p=19 w=map[total:5 v4:5 v5:5]        l=map[total:14 v4:9 v5:5]
+	//        v4 p=19 w=map[total:9 v3:9 v5:9]        l=map[total:10 v3:5 v5:5]
+	//        v5 p=19 w=map[total:5 v3:5 v4:5]        l=map[total:14 v3:5 v4:9]
 )
 
 type Opts struct {
@@ -402,6 +423,7 @@ type Opts struct {
 	hazards        map[rules.Point]bool
 	LeafPlayout    bool
 	LeafHeur       bool
+	AvoidLH2H      bool
 }
 
 func (o *Opts) Logd(msg string, args ...interface{}) {

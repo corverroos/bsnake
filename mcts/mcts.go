@@ -82,6 +82,20 @@ func expansion(n *node, o *Opts) (*node, error) {
 
 	var res *node
 	moveSet := board.GenMoveSet(n.board)
+
+	if o.AvoidLH2H {
+		temp := make([]map[int]string, 0, len(moveSet))
+		for _, moves := range moveSet {
+			if board.IsLoosingH2H(n.board, n.rootIdx, moves[n.rootIdx]) {
+				continue
+			}
+			temp = append(temp, moves)
+		}
+		if len(temp) > 0 {
+			moveSet = temp
+		}
+	}
+
 	for i, moves := range moveSet {
 		child, err := n.AppendChild(moves)
 		if err != nil {

@@ -22,18 +22,18 @@ func main() {
 	sl := []server{
 		{
 			Port:   8082,
-			Snakes: []string{"v2", "v1", "v4", "mx4"},
+			Snakes: []string{"v3", "v4", "v5", "mx4"},
 		},
-		{
-			Ref:    "e9de2a3c67548abc89fb59cea871ec02069ba26b",
-			Port:   8083,
-			Snakes: []string{"boomboom"},
-		},
+		//{
+		//	Ref:    "e9de2a3c67548abc89fb59cea871ec02069ba26b",
+		//	Port:   8083,
+		//	Snakes: []string{"boomboom"},
+		//},
 	}
 
 	opts := options{
 		Total:   50,
-		Players: 4,
+		Players: 3,
 	}
 
 	res, err := run(ctx, opts, sl...)

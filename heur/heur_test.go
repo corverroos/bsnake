@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/BattlesnakeOfficial/rules"
@@ -53,55 +54,74 @@ func TestFlood(t *testing.T) {
 	tests := []struct {
 		Name     string
 		ControlA map[int]float64
-		ControlB map[int]float64
+		Control  map[int]float64
 		Starve   map[int]bool
 		Heur     map[int]float64
 		Move     string
 	}{
 		{
-			Name:     "../testdata/input-001.json",
-			ControlB: map[int]float64{0: 49},
-			Starve:   map[int]bool{0: false},
-			Heur:     map[int]float64{0: 0},
-			Move:     "down",
+			Name:    "../testdata/input-001.json",
+			Control: map[int]float64{0: 49},
+			Starve:  map[int]bool{0: false},
+			Heur:    map[int]float64{0: 0.0002857142857142857},
+			Move:    "left",
 		},
 		{
-			Name:     "../testdata/input-006.json",
-			ControlB: map[int]float64{0: 1, 1: 120},
-			Starve:   map[int]bool{1: false},
-			Heur:     map[int]float64{0: -3.5697887970615247, 1: 3.5697887970615247},
-			Move:     "up",
+			Name:    "../testdata/input-006.json",
+			Control: map[int]float64{0: 1, 1: 120},
+			Starve:  map[int]bool{1: false},
+			Heur:    map[int]float64{0: -0.49714810442083174, 1: 0.06939485766758494},
+			Move:    "up",
 		},
 		{
-			Name:     "../testdata/input-007.json",
-			ControlB: map[int]float64{0: 91, 1: 14, 2: 16},
-			Starve:   map[int]bool{0: false, 2: false},
-			Heur:     map[int]float64{0: 3.760330578512397, 1: -1.2964876033057848, 2: -2.4638429752066116},
-			Move:     "up",
+			Name:    "../testdata/input-007.json",
+			Control: map[int]float64{0: 91, 1: 14, 2: 16},
+			Starve:  map[int]bool{0: false, 2: false},
+			Heur:    map[int]float64{0: 0.08774471992653812, 1: -0.018851239669421482, 2: -0.0679843893480257},
+			Move:    "up",
 		}, {
-			Name:     "../testdata/input-016.json",
-			ControlB: map[int]float64{0: 8, 1: 1},
-			Starve:   map[int]bool{},
-			Heur:     map[int]float64{0: 3.1944444444444446, 1: -3.1944444444444446},
-			Move:     "up",
+			Name:    "../testdata/input-016.json",
+			Control: map[int]float64{0: 8, 1: 1},
+			Starve:  map[int]bool{},
+			Heur:    map[int]float64{0: 0.07011111111111111, 1: -0.40244444444444444},
+			Move:    "up",
 		}, {
-			Name:     "../testdata/input-017.json",
-			ControlB: map[int]float64{0: 1, 1: 8},
-			Starve:   map[int]bool{},
-			Heur:     map[int]float64{0: -3.1944444444444446, 1: 3.1944444444444446},
-			Move:     "left",
+			Name:    "../testdata/input-017.json",
+			Control: map[int]float64{0: 1, 1: 8},
+			Starve:  map[int]bool{},
+			Heur:    map[int]float64{0: -0.40244444444444444, 1: 0.07011111111111111},
+			Move:    "left",
 		}, {
-			Name:     "../testdata/input-022.json",
-			ControlB: map[int]float64{0: 27, 1: 40, 2: 54},
-			Starve:   map[int]bool{1: false, 2: false},
-			Heur:     map[int]float64{0: -0.780849244799088, 1: 0.7908235964662298, 2: -0.009974351667141557},
-			Move:     "up",
+			Name:    "../testdata/input-022.json",
+			Control: map[int]float64{0: 27, 1: 40, 2: 54},
+			Starve:  map[int]bool{1: false, 2: false},
+			Heur:    map[int]float64{0: -0.014836357303441936, 1: 0.03235929831227638, 2: -0.017068395554288966},
+			Move:    "up",
 		}, {
-			Name:     "../testdata/input-029.json",
-			ControlB: map[int]float64{0: 3, 1: 22},
-			Starve:   map[int]bool{},
-			Heur:     map[int]float64{0: -3.0538461538461537, 1: 3.0538461538461537},
-			Move:     "left",
+			Name:    "../testdata/input-029.json",
+			Control: map[int]float64{0: 3, 1: 22},
+			Starve:  map[int]bool{},
+			Heur:    map[int]float64{0: -0.2649538461538462, 1: 0.06555384615384616},
+			Move:    "left",
+		}, {
+			Name:    "../testdata/input-030.json",
+			Control: map[int]float64{0: 60, 1: 61},
+			Starve:  map[int]bool{0: false, 1: false},
+			Heur:    map[int]float64{0: -0.035831320194956565, 1: 0.03619495655859293},
+			Move:    "up",
+		}, {
+			Name:    "../testdata/input-031.json",
+			Control: map[int]float64{0: 81, 1: 40},
+			Starve:  map[int]bool{0: false, 1: false},
+			Heur:    map[int]float64{0: -0.031156198347107443, 1: 0.031610743801652894},
+			Move:    "right",
+		},
+		{
+			Name:    "../testdata/input-032.json",
+			Control: map[int]float64{0: 95, 1: 26},
+			Starve:  map[int]bool{0: false, 1: false},
+			Heur:    map[int]float64{0: 0.03818801652892562, 1: -0.037733471074380166},
+			Move:    "up",
 		},
 	}
 
@@ -110,15 +130,34 @@ func TestFlood(t *testing.T) {
 			b, youIdx := fileToBoard(t, test.Name)
 			fmt.Printf("YouIdx: %d\n", youIdx)
 
+			if strings.Contains(test.Name, "031") {
+				b, _ = (&rules.StandardRuleset{}).CreateNextBoardState(b, []rules.SnakeMove{
+					{ID: "gs_XhSkKctBXVSqxjkvKR6qkXXJ", Move: "left"},
+					{ID: "gs_kyQbXRXC3879c4dRwBQt8kxV", Move: "right"},
+				})
+			}
+			if strings.Contains(test.Name, "032") {
+				var err error
+				b, err = (&rules.StandardRuleset{}).CreateNextBoardState(b, []rules.SnakeMove{
+					{ID: "gs_wgDwS8ckRBr4DmK7MFGjpW79", Move: "down"},
+					{ID: "gs_FktVKX79vm8cYdRrxj6bWRv6", Move: "up"},
+				})
+				jtest.RequireNil(t, err)
+			}
+
 			control, starve := Flood(b, nil)
-			require.EqualValues(t, test.ControlB, control)
+			require.EqualValues(t, test.Control, control)
 			require.EqualValues(t, test.Starve, starve)
 
 			f := &Factors{
-				Control: 5,
-				Length:  10,
-				Starve:  -10,
+				Control: 0.05,
+				Length:  0.4,
+				Boxed:   -0.5,
+				Hunger:  -0.001,
+				Starve:  -0.9,
+				Walls:   0.001,
 			}
+
 			heur := Calc(f, b, nil)
 			require.EqualValues(t, test.Heur, heur)
 

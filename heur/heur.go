@@ -1,6 +1,7 @@
 package heur
 
 import (
+	"math"
 	"sort"
 
 	"github.com/BattlesnakeOfficial/rules"
@@ -10,7 +11,9 @@ import (
 
 type Factors struct {
 	Control float64
+	Boxed   float64
 	Length  float64
+	Walls   float64
 	Hunger  float64
 	Starve  float64
 }
@@ -23,6 +26,13 @@ func Calc(f *Factors, b *rules.BoardState, hazards map[rules.Point]bool) map[int
 	var starve map[int]bool
 	if f.Control > 0 {
 		control, starve = Flood(b, hazards)
+	}
+
+	walls := Walls(b)
+
+	boxed := make(map[int]float64)
+	for idx, area := range control {
+		boxed[idx] = 1.0 - math.Min(1.0, area/float64(len(b.Snakes[idx].Body)))
 	}
 
 	normalize(lens)
@@ -43,6 +53,14 @@ func Calc(f *Factors, b *rules.BoardState, hazards map[rules.Point]bool) map[int
 		res[i] += f.Hunger * v
 	}
 
+	for i, v := range boxed {
+		res[i] += f.Boxed * v
+	}
+
+	for i, v := range walls {
+		res[i] += f.Walls * v
+	}
+
 	for k := range res {
 		if starve[k] {
 			res[k] += f.Starve
@@ -50,6 +68,30 @@ func Calc(f *Factors, b *rules.BoardState, hazards map[rules.Point]bool) map[int
 	}
 
 	return res
+}
+
+func Walls(b *rules.BoardState) map[int]float64 {
+	walls := make(map[int]float64)
+	for i := 0; i < len(b.Snakes); i++ {
+		if b.Snakes[i].EliminatedCause != "" {
+			continue
+		}
+
+		h := b.Snakes[i].Body[0]
+		w := b.Width - h.X
+		if t := h.X + 1; t < w {
+			w = t
+		}
+		if t := b.Height - h.Y; t < w {
+			w = t
+		}
+		if t := h.Y + 1; t < w {
+			w = t
+		}
+		walls[i] = float64(w) / float64(b.Height)
+	}
+
+	return walls
 }
 
 func Hunger(b *rules.BoardState, hazards map[rules.Point]bool) map[int]float64 {

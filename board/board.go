@@ -71,6 +71,21 @@ func IsRationalMove(board *rules.BoardState, snakeIdx int, move string) bool {
 	return true
 }
 
+func IsLoosingH2H(board *rules.BoardState, snakeIdx int, move string) bool {
+	next := MovePoint(board.Snakes[snakeIdx].Body[0], move)
+
+	for i := 0; i < len(board.Snakes); i++ {
+		if i == snakeIdx || len(board.Snakes[i].Body) <= len(board.Snakes[snakeIdx].Body) {
+			continue
+		}
+		if Distance(next, board.Snakes[i].Body[0]) == 1 {
+			return true
+		}
+	}
+
+	return false
+}
+
 func MovePoint(p rules.Point, move string) rules.Point {
 	switch move {
 	case "up":

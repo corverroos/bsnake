@@ -157,6 +157,22 @@ var snakes = map[string]snake{
 			return mcts.SelectMove(ctx, board, coordsToPoints(req.Board.Hazards), rootIdx, &mcts.OptsV4)
 		},
 	},
+	"v5": {
+		Alias:       "latest",
+		Description: "MCTS with multiplayer, simultaneous move, Decoupled-UCT, heuristic leaf scores",
+		Info: BattlesnakeInfoResponse{
+			APIVersion: "1",
+			Author:     "corverroos",
+			Color:      "#CDD7B6",
+			Head:       "villain",
+			Tail:       "rocket",
+			Meta:       mcts.OptsV5,
+		},
+		Move: func(ctx context.Context, req GameRequest) (string, error) {
+			board, rootIdx := gameReqToBoard(req)
+			return mcts.SelectMove(ctx, board, coordsToPoints(req.Board.Hazards), rootIdx, &mcts.OptsV5)
+		},
+	},
 }
 
 var (
