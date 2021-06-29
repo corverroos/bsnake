@@ -76,7 +76,7 @@ func TestMinimax2(t *testing.T) {
 				root := NewRoot(rulset, board, rootIdx)
 				fmt.Printf("rootIdx=%v\n", rootIdx)
 
-				f := heur.Factors{
+				f := &heur.Factors{
 					Control: 0.5,
 					Length:  0.3,
 					Starve:  -0.9,
@@ -95,7 +95,7 @@ func TestMinimax2(t *testing.T) {
 				root := NewRoot(rulset, board, rootIdx)
 				fmt.Printf("rootIdx=%v\n", rootIdx)
 
-				f := heur.Factors{
+				f := &heur.Factors{
 					Control: 0.5,
 					Length:  0.3,
 					Starve:  -0.9,

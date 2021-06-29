@@ -22,7 +22,7 @@ func main() {
 	sl := []server{
 		{
 			Port:   8082,
-			Snakes: []string{"v2", "v1", "mx3", "mx4"},
+			Snakes: []string{"v2", "v1", "v4", "mx4"},
 		},
 		{
 			Ref:    "e9de2a3c67548abc89fb59cea871ec02069ba26b",

@@ -333,6 +333,7 @@ var (
 		UCB1_C:       4,
 		MaxPlayout:   30,
 		SelectRandom: 20,
+		LeafPlayout:  true,
 	}
 
 	// mx3 = 10/28.0 => 0.35714285714285715
@@ -349,6 +350,7 @@ var (
 		UCB1_C:       4, // 2
 		MaxPlayout:   30,
 		SelectRandom: 20,
+		LeafPlayout:  true,
 	}
 	// Basic MCTS with RobustSafe move, big C.
 	OptsV3 = Opts{
@@ -357,7 +359,24 @@ var (
 		UCB1_C:         4,  // 2
 		MaxPlayout:     15, // 30
 		SelectRandom:   10, // 20
+		LeafPlayout:    true,
 		PlayoutMaxHeur: true,
+		HeurFactors: &heur.Factors{
+			Control: 0.05,
+			Length:  0.35,
+			Hunger:  -0.001,
+			Starve:  -0.9,
+		},
+	}
+
+	OptsV4 = Opts{
+		Tuned:        true,
+		Version:      2,
+		UCB1_C:       4,
+		MaxPlayout:   30,
+		SelectRandom: 20,
+		LeafPlayout:  false,
+		LeafHeur:     true,
 		HeurFactors: &heur.Factors{
 			Control: 0.05,
 			Length:  0.35,
@@ -381,6 +400,8 @@ type Opts struct {
 	Tuned          bool
 	PlayoutMaxHeur bool
 	hazards        map[rules.Point]bool
+	LeafPlayout    bool
+	LeafHeur       bool
 }
 
 func (o *Opts) Logd(msg string, args ...interface{}) {

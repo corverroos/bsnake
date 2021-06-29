@@ -14,7 +14,7 @@ type mx struct {
 	minimax float64
 }
 
-func Minimax(n *node, f heur.Factors, hazards map[rules.Point]bool, ply int) (map[int]mx, error) {
+func Minimax(n *node, f *heur.Factors, hazards map[rules.Point]bool, ply int) (map[int]mx, error) {
 	for _, moves := range board.GenMoveSet(n.board) {
 		child, err := n.AppendChild(moves)
 		if err != nil {
@@ -89,7 +89,7 @@ func MxPropagate(n *node) map[int]mx {
 	return res
 }
 
-func MinimaxOnce(root *node, f heur.Factors, o *Opts, hazards map[rules.Point]bool) (map[int]mx, error) {
+func MinimaxOnce(root *node, f *heur.Factors, o *Opts, hazards map[rules.Point]bool) (map[int]mx, error) {
 	n := selection(root, o)
 
 	if !n.IsTerminal() && n.board.Snakes[n.rootIdx].EliminatedCause == "" {
@@ -111,7 +111,7 @@ func MinimaxOnce(root *node, f heur.Factors, o *Opts, hazards map[rules.Point]bo
 	}
 }
 
-func SelectMx(board *rules.BoardState, hazards []rules.Point, rootIDx int, f heur.Factors, o *Opts) (string, error) {
+func SelectMx(board *rules.BoardState, hazards []rules.Point, rootIDx int, f *heur.Factors, o *Opts) (string, error) {
 	t0 := time.Now()
 
 	var ruleset rules.Ruleset
@@ -144,7 +144,7 @@ func SelectMx(board *rules.BoardState, hazards []rules.Point, rootIDx int, f heu
 	return moves[rootIDx].move, nil
 }
 
-func SelectMinimax(board *rules.BoardState, hazards []rules.Point, rootIDx int, f heur.Factors, ply int) (string, error) {
+func SelectMinimax(board *rules.BoardState, hazards []rules.Point, rootIDx int, f *heur.Factors, ply int) (string, error) {
 	var ruleset rules.Ruleset
 	if len(board.Snakes) == 1 {
 		ruleset = &rules.SoloRuleset{}

@@ -15,7 +15,7 @@ type Factors struct {
 	Starve  float64
 }
 
-func Calc(f Factors, b *rules.BoardState, hazards map[rules.Point]bool) map[int]float64 {
+func Calc(f *Factors, b *rules.BoardState, hazards map[rules.Point]bool) map[int]float64 {
 	lens := Length(b)
 	hunger := Hunger(b, hazards)
 
@@ -197,7 +197,7 @@ func Length(b *rules.BoardState) map[int]float64 {
 	return res
 }
 
-func SelectMove(f Factors, b *rules.BoardState, hazards map[rules.Point]bool, rootIdx int) (string, error) {
+func SelectMove(f *Factors, b *rules.BoardState, hazards map[rules.Point]bool, rootIdx int) (string, error) {
 
 	var maxHeur float64
 	var maxMove string

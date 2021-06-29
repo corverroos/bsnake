@@ -73,7 +73,7 @@ func Test500Once(t *testing.T) {
 
 			// V3 : totals=map[expansion:447.687227ms playout:2.987921459s selection:1.105010259s]
 			// V2 : totals=map[expansion:481.324695ms playout:2.397827728s selection:1.186210448s]
-			opts := &OptsV3
+			opts := &OptsV4
 			opts.logd = func(s string, i ...interface{}) {
 				//fmt.Printf(s+"\n", i...)
 			}

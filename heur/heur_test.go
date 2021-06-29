@@ -114,7 +114,7 @@ func TestFlood(t *testing.T) {
 			require.EqualValues(t, test.ControlB, control)
 			require.EqualValues(t, test.Starve, starve)
 
-			f := Factors{
+			f := &Factors{
 				Control: 5,
 				Length:  10,
 				Starve:  -10,

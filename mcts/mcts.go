@@ -53,12 +53,21 @@ func Once(root *node, o *Opts) error {
 		return nil
 	}
 
-	t0 := time.Now()
-	totals, err := playoutRandomRational(root, node, o)
-	if err != nil {
-		return err
+	var totals map[int]float64
+	var err error
+	if o.LeafPlayout {
+		totals, err = playoutRandomRational(root, node, o)
+		if err != nil {
+			return err
+		}
+		o.Logd("propagate play-out, totals=%v", totals)
+	} else if o.LeafHeur {
+		totals = heur.Calc(o.HeurFactors, node.board, o.hazards)
+		o.Logd("propagate heuristics, totals=%v", totals)
+	} else {
+		panic("invalid options, no leaf strategy")
 	}
-	o.Logd("propagate play-out, totals=%v, latency=%dus", totals, time.Since(t0).Microseconds())
+
 	propagation(node, totals)
 
 	return nil
@@ -182,7 +191,7 @@ func playoutRandomRational(root, node *node, o *Opts) (map[int]float64, error) {
 		}
 
 		if o.PlayoutMaxHeur {
-			for idx, total := range heur.Calc(*o.HeurFactors, b, o.hazards) {
+			for idx, total := range heur.Calc(o.HeurFactors, b, o.hazards) {
 				if _, ok := res[idx]; ok {
 					continue
 				}
@@ -351,7 +360,7 @@ func selection(root *node, o *Opts) *node {
 
 			if o.SelectHeur && len(tuple.child.heurTotals) == 0 {
 				//l := lat("heur")
-				tuple.child.heurTotals = heur.Calc(*o.HeurFactors, tuple.child.board, o.hazards)
+				tuple.child.heurTotals = heur.Calc(o.HeurFactors, tuple.child.board, o.hazards)
 				//l()
 			}
 

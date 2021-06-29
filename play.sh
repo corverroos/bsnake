@@ -9,7 +9,7 @@ if [ "$1" == "solo" ]; then
 elif [ "$1" == "heur" ]; then
   battlesnake play -W 11 -H 11 --name M3 --url http://localhost:8080/mx3/ --name M4 --url http://localhost:8080/mx4/ -g standard -v
 elif [ "$1" == "dual" ]; then
-  battlesnake play -W 11 -H 11 --name L --url http://localhost:8080/latest/ --name M3 --url http://localhost:8080/mx3/ -g standard -v
+  battlesnake play -W 11 -H 11 --name V1 --url http://localhost:8080/v1/ --name V4 --url http://localhost:8080/v4/ -g standard -v
 elif [ "$1" == "trip" ]; then
   battlesnake play -W 11 -H 11 --name L --url http://localhost:8080/latest/ --name 1 --url http://localhost:8080/v1/ --name M3 --url http://localhost:8080/mx3/ -g standard -v
 elif [ "$1" == "quad" ]; then
