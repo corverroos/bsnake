@@ -14,19 +14,19 @@ import (
 
 func TestLength(t *testing.T) {
 	tests := []struct {
-		Exp  map[int]float64
+		Exp  []float64
 		Lens []int
 	}{
 		{
-			Exp: map[int]float64{},
+			Exp: []float64{},
 		},
 		{
 			Lens: []int{3, 3, 3},
-			Exp:  map[int]float64{0: 0, 1: 0, 2: 0},
+			Exp:  []float64{0, 0, 0},
 		},
 		{
 			Lens: []int{33, 13, 03},
-			Exp:  map[int]float64{0: 0.34013605442176875, 1: -0.06802721088435372, 2: -0.27210884353741494},
+			Exp:  []float64{0.34013605442176875, -0.06802721088435372, -0.27210884353741494},
 		},
 	}
 

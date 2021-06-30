@@ -67,6 +67,12 @@ func Calc(f *Factors, b *rules.BoardState, hazards map[rules.Point]bool) map[int
 		}
 	}
 
+	for i := 0; i < l; i++ {
+		if b.Snakes[i].EliminatedCause != "" {
+			res[i] = -1
+		}
+	}
+
 	return res
 }
 
@@ -120,12 +126,15 @@ func Flood(b *rules.BoardState, hazards map[rules.Point]bool) ([]float64, []int)
 	control := make([]float64, len(b.Snakes))
 	starve := make([]int, len(b.Snakes)) // 1 == true, 0 or -1 == false
 
-	visited := make(map[rules.Point]int, b.Height*b.Width)
+	visited := make([]int, b.Height*b.Width)
+	food := make([]bool, b.Height*b.Width)
 
-	// TODO(corver): Maybe just iterate instead of using a map.
-	food := make(map[rules.Point]bool, len(b.Food))
+	pidx := func(p rules.Point) int {
+		return int(p.Y*b.Width + p.X)
+	}
+
 	for _, point := range b.Food {
-		food[point] = true
+		food[pidx(point)] = true
 	}
 
 	type E struct {
@@ -147,9 +156,9 @@ func Flood(b *rules.BoardState, hazards map[rules.Point]bool) ([]float64, []int)
 		l := len(s.Body)
 		for i := 0; i < l; i++ {
 			if i == 0 {
-				visited[s.Body[i]] = 1
+				visited[pidx(s.Body[i])] = 1
 			} else {
-				visited[s.Body[i]] = i - l
+				visited[pidx(s.Body[i])] = i - l
 			}
 		}
 	}
@@ -176,9 +185,11 @@ func Flood(b *rules.BoardState, hazards map[rules.Point]bool) ([]float64, []int)
 				next.Y -= 1
 			}
 
+			nidx := pidx(next)
+
 			if next.X == -1 || next.Y == -1 || next.X == b.Width || next.Y == b.Height {
 				continue
-			} else if prev, ok := visited[next]; ok && (prev > 0 || -prev > e.Depth) {
+			} else if prev := visited[nidx]; prev > 0 || -prev > e.Depth {
 				continue
 			}
 
@@ -187,7 +198,7 @@ func Flood(b *rules.BoardState, hazards map[rules.Point]bool) ([]float64, []int)
 				h -= 15
 			}
 
-			if food[next] {
+			if food[nidx] {
 				starve[e.Idx] = -1
 				h = 100
 			}
@@ -206,7 +217,7 @@ func Flood(b *rules.BoardState, hazards map[rules.Point]bool) ([]float64, []int)
 				Depth:  e.Depth + 1,
 			})
 
-			visited[next] = 1
+			visited[nidx] = 1
 		}
 	}
 
