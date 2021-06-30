@@ -19,59 +19,59 @@ type Factors struct {
 }
 
 func Calc(f *Factors, b *rules.BoardState, hazards map[rules.Point]bool) map[int]float64 {
-	lens := Length(b)
-	hunger := Hunger(b, hazards)
+	l := len(b.Snakes)
 
-	var control map[int]float64
-	var starve map[int]bool
-	if f.Control > 0 {
-		control, starve = Flood(b, hazards)
+	res := make(map[int]float64, l)
+
+	if f.Length != 0 {
+		lengths := Length(b)
+		normalize(lengths)
+		for i := 0; i < l; i++ {
+			res[i] += f.Length * lengths[i]
+		}
 	}
 
-	walls := Walls(b)
-
-	boxed := make(map[int]float64)
-	for idx, area := range control {
-		boxed[idx] = 1.0 - math.Min(1.0, area/float64(len(b.Snakes[idx].Body)))
+	if f.Hunger != 0 {
+		hunger := Hunger(b, hazards)
+		normalize(hunger)
+		for i := 0; i < l; i++ {
+			res[i] += f.Hunger * hunger[i]
+		}
 	}
 
-	normalize(lens)
-	normalize(control)
-	normalize(hunger)
+	if f.Control != 0 || f.Starve != 0 || f.Boxed != 0 {
+		control, starve := Flood(b, hazards)
 
-	res := make(map[int]float64)
+		if f.Boxed != 0 {
+			for i := 0; i < l; i++ {
+				boxed := 1.0 - math.Min(1.0, control[i]/float64(len(b.Snakes[i].Body)))
+				res[i] += f.Boxed * boxed
+			}
+		}
 
-	for i, v := range control {
-		res[i] += f.Control * v
+		normalize(control)
+
+		for i := 0; i < l; i++ {
+			res[i] += f.Control * control[i]
+
+			if starve[i] == 1 {
+				res[i] += f.Starve
+			}
+		}
 	}
 
-	for i, v := range lens {
-		res[i] += f.Length * v
-	}
-
-	for i, v := range hunger {
-		res[i] += f.Hunger * v
-	}
-
-	for i, v := range boxed {
-		res[i] += f.Boxed * v
-	}
-
-	for i, v := range walls {
-		res[i] += f.Walls * v
-	}
-
-	for k := range res {
-		if starve[k] {
-			res[k] += f.Starve
+	if f.Walls != 0 {
+		walls := Walls(b)
+		for i := 0; i < l; i++ {
+			res[i] += f.Walls * walls[i]
 		}
 	}
 
 	return res
 }
 
-func Walls(b *rules.BoardState) map[int]float64 {
-	walls := make(map[int]float64)
+func Walls(b *rules.BoardState) []float64 {
+	walls := make([]float64, len(b.Snakes))
 	for i := 0; i < len(b.Snakes); i++ {
 		if b.Snakes[i].EliminatedCause != "" {
 			continue
@@ -94,8 +94,8 @@ func Walls(b *rules.BoardState) map[int]float64 {
 	return walls
 }
 
-func Hunger(b *rules.BoardState, hazards map[rules.Point]bool) map[int]float64 {
-	minFood := make(map[int]float64)
+func Hunger(b *rules.BoardState, hazards map[rules.Point]bool) []float64 {
+	minFood := make([]float64, len(b.Snakes))
 
 	for i := 0; i < len(b.Snakes); i++ {
 		s := &b.Snakes[i]
@@ -107,7 +107,7 @@ func Hunger(b *rules.BoardState, hazards map[rules.Point]bool) map[int]float64 {
 			if hazards[point] {
 				dist *= 2
 			}
-			if prev, ok := minFood[i]; !ok || prev > dist {
+			if prev := minFood[i]; prev == 0 || prev > dist {
 				minFood[i] = dist
 			}
 		}
@@ -116,11 +116,13 @@ func Hunger(b *rules.BoardState, hazards map[rules.Point]bool) map[int]float64 {
 	return minFood
 }
 
-func Flood(b *rules.BoardState, hazards map[rules.Point]bool) (map[int]float64, map[int]bool) {
-	control := make(map[int]float64, len(b.Snakes))
-	starve := make(map[int]bool, len(b.Snakes))
+func Flood(b *rules.BoardState, hazards map[rules.Point]bool) ([]float64, []int) {
+	control := make([]float64, len(b.Snakes))
+	starve := make([]int, len(b.Snakes)) // 1 == true, 0 or -1 == false
+
 	visited := make(map[rules.Point]int, b.Height*b.Width)
 
+	// TODO(corver): Maybe just iterate instead of using a map.
 	food := make(map[rules.Point]bool, len(b.Food))
 	for _, point := range b.Food {
 		food[point] = true
@@ -139,14 +141,15 @@ func Flood(b *rules.BoardState, hazards map[rules.Point]bool) (map[int]float64, 
 		if s.EliminatedCause != "" {
 			continue
 		}
+
 		q = append(q, E{Idx: i, P: s.Body[0], Health: s.Health})
 
 		l := len(s.Body)
-		for i, point := range s.Body {
+		for i := 0; i < l; i++ {
 			if i == 0 {
-				visited[point] = 1
+				visited[s.Body[i]] = 1
 			} else {
-				visited[point] = i - l
+				visited[s.Body[i]] = i - l
 			}
 		}
 	}
@@ -158,7 +161,6 @@ func Flood(b *rules.BoardState, hazards map[rules.Point]bool) (map[int]float64, 
 	for len(q) > 0 {
 		e := q[0]
 		q = q[1:]
-
 		control[e.Idx]++
 
 		for i := 0; i < 4; i++ {
@@ -186,13 +188,13 @@ func Flood(b *rules.BoardState, hazards map[rules.Point]bool) (map[int]float64, 
 			}
 
 			if food[next] {
-				starve[e.Idx] = false
+				starve[e.Idx] = -1
 				h = 100
 			}
 
 			if h <= 0 {
-				if _, ok2 := starve[e.Idx]; !ok2 {
-					starve[e.Idx] = true
+				if starve[e.Idx] == 0 {
+					starve[e.Idx] = 1
 				}
 				continue
 			}
@@ -211,24 +213,25 @@ func Flood(b *rules.BoardState, hazards map[rules.Point]bool) (map[int]float64, 
 	return control, starve
 }
 
-func normalize(in map[int]float64) {
+func normalize(in []float64) {
+	l := len(in)
+
 	var total float64
-	for _, v := range in {
-		total += v
+	for i := 0; i < l; i++ {
+		total += in[i]
 	}
 
 	if total == 0 {
 		return
 	}
 
-	l := float64(len(in))
-	for k, v := range in {
-		in[k] = (v - total/l) / total
+	for i := 0; i < l; i++ {
+		in[i] = (in[i] - total/float64(l)) / total
 	}
 }
 
-func Length(b *rules.BoardState) map[int]float64 {
-	res := make(map[int]float64)
+func Length(b *rules.BoardState) []float64 {
+	res := make([]float64, len(b.Snakes))
 	for i := 0; i < len(b.Snakes); i++ {
 		if b.Snakes[i].EliminatedCause != "" {
 			continue

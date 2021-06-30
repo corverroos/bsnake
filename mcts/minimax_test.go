@@ -7,8 +7,6 @@ import (
 	"github.com/BattlesnakeOfficial/rules"
 	"github.com/luno/jettison/jtest"
 	"github.com/stretchr/testify/require"
-
-	"github.com/corverroos/bsnake/heur"
 )
 
 func TestMinimax2(t *testing.T) {
@@ -72,41 +70,20 @@ func TestMinimax2(t *testing.T) {
 				//fmt.Printf(s+"\n", i...)
 			}
 
-			{
-				root := NewRoot(rulset, board, rootIdx)
-				fmt.Printf("rootIdx=%v\n", rootIdx)
+			root := NewRoot(rulset, board, rootIdx)
+			fmt.Printf("rootIdx=%v\n", rootIdx)
 
-				f := &heur.Factors{
-					Control: 0.5,
-					Length:  0.3,
-					Starve:  -0.9,
-				}
-
-				mxl, err := Minimax(root, f, nil, 2)
+			var mxl map[int]mx
+			for i := 0; i < 10000; i++ {
+				var err error
+				mxl, err = MinimaxOnce(root, opts, nil)
 				jtest.RequireNil(t, err)
-
-				for idx, mx := range mxl {
-					fmt.Printf("snake=%v move=%v minimax=%v\n", idx, mx.move, mx.minimax)
-				}
-				require.Equal(t, test.Exp, mxl[rootIdx].move)
 			}
 
-			{
-				root := NewRoot(rulset, board, rootIdx)
-				fmt.Printf("rootIdx=%v\n", rootIdx)
-
-				var mxl map[int]mx
-				for i := 0; i < 20; i++ {
-					var err error
-					mxl, err = MinimaxOnce(root, opts, nil)
-					jtest.RequireNil(t, err)
-				}
-
-				for idx, mx := range mxl {
-					fmt.Printf("snake=%v move=%v minimax=%v\n", idx, mx.move, mx.minimax)
-				}
-				require.Equal(t, test.Exp, mxl[rootIdx].move)
+			for idx, mx := range mxl {
+				fmt.Printf("snake=%v move=%v minimax=%v\n", idx, mx.move, mx.minimax)
 			}
+			require.Equal(t, test.Exp, mxl[rootIdx].move)
 
 		})
 	}
