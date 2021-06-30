@@ -351,6 +351,12 @@ var (
 		MaxPlayout:   30,
 		SelectRandom: 20,
 		LeafPlayout:  true,
+		HeurFactors: &heur.Factors{
+			Control: 0.05,
+			Length:  0.35,
+			Hunger:  -0.001,
+			Starve:  -0.9,
+		},
 	}
 	// Basic MCTS with RobustSafe move, big C.
 	OptsV3 = Opts{

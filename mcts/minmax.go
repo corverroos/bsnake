@@ -89,11 +89,11 @@ func MxPropagate(n *node) map[int]mx {
 	return res
 }
 
-func MinimaxOnce(root *node, f *heur.Factors, o *Opts, hazards map[rules.Point]bool) (map[int]mx, error) {
+func MinimaxOnce(root *node, o *Opts, hazards map[rules.Point]bool) (map[int]mx, error) {
 	n := selection(root, o)
 
 	if !n.IsTerminal() && n.board.Snakes[n.rootIdx].EliminatedCause == "" {
-		res, err := Minimax(n, f, hazards, 2)
+		res, err := Minimax(n, o.HeurFactors, hazards, 1)
 		if err != nil {
 			return nil, err
 		}
@@ -111,7 +111,7 @@ func MinimaxOnce(root *node, f *heur.Factors, o *Opts, hazards map[rules.Point]b
 	}
 }
 
-func SelectMx(board *rules.BoardState, hazards []rules.Point, rootIDx int, f *heur.Factors, o *Opts) (string, error) {
+func SelectMx(board *rules.BoardState, hazards []rules.Point, rootIDx int, o *Opts) (string, error) {
 	t0 := time.Now()
 
 	var ruleset rules.Ruleset
@@ -135,7 +135,7 @@ func SelectMx(board *rules.BoardState, hazards []rules.Point, rootIDx int, f *he
 	var moves map[int]mx
 	var err error
 	for time.Since(t0) < time.Millisecond*340 {
-		moves, err = MinimaxOnce(root, f, o, hazmap)
+		moves, err = MinimaxOnce(root, o, hazmap)
 		if err != nil {
 			return "", err
 		}

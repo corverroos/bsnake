@@ -95,16 +95,10 @@ func TestMinimax2(t *testing.T) {
 				root := NewRoot(rulset, board, rootIdx)
 				fmt.Printf("rootIdx=%v\n", rootIdx)
 
-				f := &heur.Factors{
-					Control: 0.5,
-					Length:  0.3,
-					Starve:  -0.9,
-				}
-
 				var mxl map[int]mx
 				for i := 0; i < 20; i++ {
 					var err error
-					mxl, err = MinimaxOnce(root, f, opts, nil)
+					mxl, err = MinimaxOnce(root, opts, nil)
 					jtest.RequireNil(t, err)
 				}
 

@@ -57,25 +57,31 @@ var snakes = map[string]snake{
 		},
 	},
 	"mx2": {
-		Description: "Minimax 4-ply",
+		Description: "Minimax Tree Search",
 		Info: BattlesnakeInfoResponse{
 			APIVersion: "1",
-			Meta:       fmx2,
+			Color:      "#ccccff",
+			Head:       "snow-worm",
+			Tail:       "block-bum",
+			Meta:       mcts.OptsV4,
 		},
 		Move: func(ctx context.Context, req GameRequest) (string, error) {
 			board, rootIdx := gameReqToBoard(req)
-			return mcts.SelectMinimax(board, coordsToPoints(req.Board.Hazards), rootIdx, &fmx2, mxDepth(board))
+			return mcts.SelectMx(board, coordsToPoints(req.Board.Hazards), rootIdx, &mcts.OptsV4)
 		},
 	},
 	"mx3": {
-		Description: "Minimax 4-ply",
+		Description: "Minimax Tree Search",
 		Info: BattlesnakeInfoResponse{
 			APIVersion: "1",
-			Meta:       fmx3,
+			Color:      "#ccccff",
+			Head:       "snow-worm",
+			Tail:       "block-bum",
+			Meta:       mcts.OptsV3,
 		},
 		Move: func(ctx context.Context, req GameRequest) (string, error) {
 			board, rootIdx := gameReqToBoard(req)
-			return mcts.SelectMinimax(board, coordsToPoints(req.Board.Hazards), rootIdx, &fmx3, mxDepth(board))
+			return mcts.SelectMx(board, coordsToPoints(req.Board.Hazards), rootIdx, &mcts.OptsV3)
 		},
 	},
 	"mx4": {
@@ -85,14 +91,11 @@ var snakes = map[string]snake{
 			Color:      "#ccccff",
 			Head:       "snow-worm",
 			Tail:       "block-bum",
-			Meta: map[string]interface{}{
-				"heur": fmx3,
-				"opts": mcts.OptsV2,
-			},
+			Meta:       mcts.OptsV2,
 		},
 		Move: func(ctx context.Context, req GameRequest) (string, error) {
 			board, rootIdx := gameReqToBoard(req)
-			return mcts.SelectMx(board, coordsToPoints(req.Board.Hazards), rootIdx, &fmx3, &mcts.OptsV2)
+			return mcts.SelectMx(board, coordsToPoints(req.Board.Hazards), rootIdx, &mcts.OptsV2)
 		},
 	},
 	"v1": {
