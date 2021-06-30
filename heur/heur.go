@@ -18,10 +18,10 @@ type Factors struct {
 	Starve  float64
 }
 
-func Calc(f *Factors, b *rules.BoardState, hazards map[rules.Point]bool) map[int]float64 {
+func Calc(f *Factors, b *rules.BoardState, hazards map[rules.Point]bool) []float64 {
 	l := len(b.Snakes)
 
-	res := make(map[int]float64, l)
+	res := make([]float64, l)
 
 	if f.Length != 0 {
 		lengths := Length(b)

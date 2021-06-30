@@ -73,7 +73,7 @@ func TestMinimax2(t *testing.T) {
 			root := NewRoot(rulset, board, rootIdx)
 			fmt.Printf("rootIdx=%v\n", rootIdx)
 
-			var mxl map[int]mx
+			var mxl []mx
 			for i := 0; i < 10000; i++ {
 				var err error
 				mxl, err = MinimaxOnce(root, opts, nil)

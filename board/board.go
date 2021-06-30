@@ -12,15 +12,11 @@ func RandMoves() []string {
 	return moveperms[rand.Intn(perms)]
 }
 
-func GenMoveSet(board *rules.BoardState) []map[int]string {
-	res := make([]map[int]string, 1)
+func GenMoveSet(board *rules.BoardState) [][]string {
+	res := [][]string{make([]string, len(board.Snakes))}
 
-	clone := func(m map[int]string) map[int]string {
-		res := make(map[int]string, len(m))
-		for k, v := range m {
-			res[k] = v
-		}
-		return res
+	clone := func(m []string) []string {
+		return append([]string(nil), m...)
 	}
 
 	for i := 0; i < len(board.Snakes); i++ {
@@ -28,7 +24,7 @@ func GenMoveSet(board *rules.BoardState) []map[int]string {
 			continue
 		}
 
-		temp := make([]map[int]string, 0, 4*len(res))
+		temp := make([][]string, 0, 4*len(res))
 		for mi, move := range Moves {
 			if !IsRationalMove(board, i, move) {
 				// Skip unless it will result in 0 moves

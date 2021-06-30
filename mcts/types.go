@@ -52,7 +52,7 @@ func (e edge) String() string {
 	return res
 }
 
-func newEdge(moves map[int]string) edge {
+func newEdge(moves []string) edge {
 	var v int32
 	for idx, move := range moves {
 		switch move {
@@ -64,6 +64,8 @@ func newEdge(moves map[int]string) edge {
 			v |= 3 << (idx * 3)
 		case "right":
 			v |= 4 << (idx * 3)
+		case "":
+			continue
 		default:
 			panic("invalid")
 		}
@@ -78,7 +80,7 @@ type tuple struct {
 
 type node struct {
 	ruleset  rules.Ruleset
-	idsByIdx map[int]string
+	idsByIdx []string
 	rootIdx  int
 
 	board *rules.BoardState
@@ -86,14 +88,14 @@ type node struct {
 
 	parent    *node
 	childs    []tuple
-	lastMoves map[int]string
+	lastMoves []string
 
 	n            float64
-	totals       map[int]float64
-	totalSquares map[int]float64
+	totals       []float64
+	totalSquares []float64
 
-	termTotals map[int]float64
-	heurTotals map[int]float64
+	termTotals []float64
+	heurTotals []float64
 }
 
 func (n *node) MinMaxMove(idx int) string {
@@ -184,10 +186,10 @@ func (n *node) RobustMoves(idx int) []string {
 	return res
 }
 
-func (n *node) UpdateScores(s map[int]float64) {
+func (n *node) UpdateScores(s []float64) {
 	if n.totals == nil {
-		n.totals = make(map[int]float64)
-		n.totalSquares = make(map[int]float64)
+		n.totals = make([]float64, len(s))
+		n.totalSquares = make([]float64, len(s))
 	}
 	n.n++
 	for i, t := range s {
@@ -204,7 +206,7 @@ func (n *node) IsTerminal() bool {
 	return len(n.termTotals) > 0
 }
 
-func (n *node) CheckTerminal() (map[int]float64, bool, error) {
+func (n *node) CheckTerminal() ([]float64, bool, error) {
 	if n.board.Snakes[n.rootIdx].EliminatedCause == "" {
 		// We are still alive
 		if ok, err := n.ruleset.IsGameOver(n.board); err != nil {
@@ -217,7 +219,7 @@ func (n *node) CheckTerminal() (map[int]float64, bool, error) {
 
 	// We are dead or game is over
 
-	res := make(map[int]float64)
+	res := make([]float64, len(n.idsByIdx))
 	for idx, snake := range n.board.Snakes {
 		score := -1.0
 		if snake.EliminatedCause == "" {
@@ -259,8 +261,8 @@ func (n *node) UCB1(snakeIDx int) (float64, bool) {
 	return n.AvgScore(snakeIDx) + math.Sqrt(2)*math.Sqrt(math.Log(n.parent.n)/n.n), false
 }
 
-func genChild(n *node, moves map[int]string) (tuple, error) {
-	if _, ok := moves[n.rootIdx]; !ok {
+func genChild(n *node, moves []string) (tuple, error) {
+	if moves[n.rootIdx] == "" {
 		panic("missing root idx")
 	}
 
@@ -288,15 +290,15 @@ func genChild(n *node, moves map[int]string) (tuple, error) {
 		lastMoves:    moves,
 		parent:       n,
 		childs:       make([]tuple, 0, 64),
-		totals:       make(map[int]float64),
-		totalSquares: make(map[int]float64),
-		heurTotals:   make(map[int]float64),
+		totals:       make([]float64, len(n.idsByIdx)),
+		totalSquares: make([]float64, len(n.idsByIdx)),
+		heurTotals:   make([]float64, len(n.idsByIdx)),
 	}
 
 	return tuple{edge: e, child: child}, nil
 }
 
-func (n *node) AppendChild(moves map[int]string) (*node, error) {
+func (n *node) AppendChild(moves []string) (*node, error) {
 	tup, err := genChild(n, moves)
 	if err != nil {
 		return nil, err
@@ -308,7 +310,7 @@ func (n *node) AppendChild(moves map[int]string) (*node, error) {
 }
 
 func NewRoot(ruleset rules.Ruleset, board *rules.BoardState, rootIdx int) *node {
-	idsByIdx := make(map[int]string)
+	idsByIdx := make([]string, len(board.Snakes))
 	for idx, snake := range board.Snakes {
 		idsByIdx[idx] = snake.ID
 	}
@@ -319,9 +321,9 @@ func NewRoot(ruleset rules.Ruleset, board *rules.BoardState, rootIdx int) *node 
 		board:        board,
 		n:            1,
 		childs:       make([]tuple, 0, 64),
-		totals:       make(map[int]float64),
-		totalSquares: make(map[int]float64),
-		heurTotals:   make(map[int]float64),
+		totals:       make([]float64, len(idsByIdx)),
+		totalSquares: make([]float64, len(idsByIdx)),
+		heurTotals:   make([]float64, len(idsByIdx)),
 	}
 }
 

@@ -189,87 +189,48 @@ func TestVoronoi(t *testing.T) {
 }
 
 func TestLen(t *testing.T) {
-	res := make(map[int]float64)
-	assignLenRewards(&Opts{}, res, map[int]int{0: 0, 1: 0}, map[int]int{0: 2, 1: 0})
+	res := make([]float64, 2)
+	assignLenRewards(&Opts{}, res, []int{0, 0}, []int{2, 0})
 	require.Equal(t, 0.1, res[0])
 	require.Equal(t, -0.1, res[1])
 
-	res = make(map[int]float64)
-	assignLenRewards(&Opts{Version: 3}, res, map[int]int{0: 0, 1: 0}, map[int]int{0: 2, 1: 0})
+	res = make([]float64, 2)
+	assignLenRewards(&Opts{Version: 3}, res, []int{0, 0}, []int{2, 0})
 	require.Equal(t, 0.8, res[0])
 	require.Equal(t, -0.3, res[1])
 }
 
-//func TestAssignLenTups(t *testing.T) {
-//	tests := []struct {
-//		Count int
-//		Exp map[int]float64
-//	}{
-//		{
-//			Count: 0,
-//			Exp: map[int]float64{},
-//		},{
-//			Count: 1,
-//			Exp: map[int]float64{0:0.5},
-//		},{
-//			Count: 2,
-//			Exp: map[int]float64{0:0.5, 1:-0.5},
-//		},{
-//			Count: 3,
-//			Exp: map[int]float64{0:0.5, 1:0, 2:-0.5},
-//		},{
-//			Count: 6,
-//			Exp: map[int]float64{0:0.5, 1:0.3333333333333333, 2:0.16666666666666666, 3:-0.16666666666666666, 4:-0.3333333333333333, 5:-0.5},
-//		},
-//	}
-//
-//	for _, test := range tests {
-//		t.Run(fmt.Sprint(test.Count), func(t *testing.T) {
-//			res := make(map[int]float64)
-//			var tups []intTup
-//			for i := 0; i < test.Count; i++ {
-//				tups = append(tups, intTup{
-//					K: i,
-//					V: 10-i,
-//				})
-//			}
-//			assignLenRewards(res, tups)
-//			require.EqualValues(t, res, test.Exp)
-//		})
-//	}
-//}
-
 func TestGenMoves(t *testing.T) {
 	tests := []struct {
 		Name string
-		Exp  []map[int]string
+		Exp  [][]string
 	}{
 		{
 			Name: "../testdata/input-021.json",
-			Exp: []map[int]string{
-				{0: "down", 1: "up"},
-				{0: "right", 1: "up"},
-				{0: "down", 1: "left"},
-				{0: "right", 1: "left"},
+			Exp: [][]string{
+				{"down", "up"},
+				{"right", "up"},
+				{"down", "left"},
+				{"right", "left"},
 			},
 		}, {
 			Name: "../testdata/input-022.json",
-			Exp: []map[int]string{
-				{0: "right", 1: "down", 2: "up"},
-				{0: "right", 1: "right", 2: "up"},
-				{0: "right", 1: "down", 2: "right"},
-				{0: "right", 1: "right", 2: "right"},
-				{0: "right", 1: "down", 2: "left"},
-				{0: "right", 1: "right", 2: "left"}},
+			Exp: [][]string{
+				{"right", "down", "up"},
+				{"right", "right", "up"},
+				{"right", "down", "right"},
+				{"right", "right", "right"},
+				{"right", "down", "left"},
+				{"right", "right", "left"}},
 		}, {
 			Name: "../testdata/input-006.json",
-			Exp: []map[int]string{
-				{0: "up", 1: "down"},
-				{0: "right", 1: "down"},
-				{0: "up", 1: "right"},
-				{0: "right", 1: "right"},
-				{0: "up", 1: "left"},
-				{0: "right", 1: "left"},
+			Exp: [][]string{
+				{"up", "down"},
+				{"right", "down"},
+				{"up", "right"},
+				{"right", "right"},
+				{"up", "left"},
+				{"right", "left"},
 			},
 		},
 	}
@@ -287,14 +248,14 @@ func TestGenMoves(t *testing.T) {
 func TestPlayoutRational(t *testing.T) {
 	tests := []struct {
 		Name string
-		Exp  map[int]float64
+		Exp  []float64
 	}{
 		{
 			Name: "../testdata/input-021.json",
-			Exp:  map[int]float64{0: 1, 1: -1},
+			Exp:  []float64{1, -1},
 		}, {
 			Name: "../testdata/input-022.json",
-			Exp:  map[int]float64{0: -1, 1: 1, 2: -1},
+			Exp:  []float64{-1, 1, -1},
 		},
 	}
 
@@ -314,13 +275,13 @@ func TestPlayoutRational(t *testing.T) {
 func TestVariance(t *testing.T) {
 	n := &node{}
 	for _, f := range []float64{4, 7, 13, 16} {
-		n.UpdateScores(map[int]float64{0: f})
+		n.UpdateScores([]float64{f})
 	}
 	require.Equal(t, 30.0, n.ScoreVariance(0))
 
 	n = &node{}
 	for _, f := range []float64{1, 2, 2, 4, 6} {
-		n.UpdateScores(map[int]float64{0: f})
+		n.UpdateScores([]float64{f})
 	}
 	require.Equal(t, 4.0, n.ScoreVariance(0))
 }
@@ -332,7 +293,7 @@ func TestChildMoves(t *testing.T) {
 	n0 := NewRoot(&rules.StandardRuleset{}, board, rootIdx)
 	require.Zero(t, n0.AvgScore(rootIdx))
 
-	moves := map[int]string{0: "left", 1: "right", 2: "down"}
+	moves := []string{"left", "right"}
 	n1, err := n0.AppendChild(moves)
 	jtest.RequireNil(t, err)
 
@@ -342,12 +303,10 @@ func TestChildMoves(t *testing.T) {
 	for _, tuple := range n0.childs {
 		e := tuple.edge
 		c := tuple.child
-		require.Equal(t, "0b10100011", fmt.Sprintf("%#b", e))
-		require.Equal(t, "lrd", e.String())
+		require.Equal(t, "0b100011", fmt.Sprintf("%#b", e))
+		require.Equal(t, "lr", e.String())
 		require.True(t, e.Is(0, moves[0]))
 		require.True(t, e.Is(1, moves[1]))
-		require.True(t, e.Is(2, moves[2]))
-		require.False(t, e.Is(3, moves[3]))
 
 		ucdb1, inf := c.UCB1(rootIdx)
 		require.Zero(t, ucdb1)
@@ -356,14 +315,14 @@ func TestChildMoves(t *testing.T) {
 }
 
 func TestEdge(t *testing.T) {
-	e := newEdge(map[int]string{0: "right"})
+	e := newEdge([]string{"right"})
 	require.Equal(t, "0b100", fmt.Sprintf("%#b", e))
 	require.Equal(t, "r", e.String())
 	require.True(t, e.Is(0, "right"))
 	require.False(t, e.Is(0, "left"))
 	require.False(t, e.Is(1, "right"))
 
-	e = newEdge(map[int]string{0: "up", 2: "up", 3: "left"})
+	e = newEdge([]string{"up", "", "up", "left"})
 	require.Equal(t, "0b11001000001", fmt.Sprintf("%#b", e))
 	require.Equal(t, "u_ul", e.String())
 	require.True(t, e.Is(0, "up"))

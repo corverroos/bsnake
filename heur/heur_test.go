@@ -55,71 +55,71 @@ func TestFlood(t *testing.T) {
 		Name    string
 		Control []float64
 		Starve  []int
-		Heur    map[int]float64
+		Heur    []float64
 		Move    string
 	}{
 		{
 			Name:    "../testdata/input-001.json",
 			Control: []float64{49},
 			Starve:  []int{-1},
-			Heur:    map[int]float64{0: 0.0002857142857142857},
+			Heur:    []float64{0.0002857142857142857},
 			Move:    "left",
 		},
 		{
 			Name:    "../testdata/input-006.json",
 			Control: []float64{1, 120},
 			Starve:  []int{0, -1},
-			Heur:    map[int]float64{0: -0.49714810442083174, 1: 0.06939485766758494},
+			Heur:    []float64{-0.49714810442083174, 0.06939485766758494},
 			Move:    "up",
 		},
 		{
 			Name:    "../testdata/input-007.json",
 			Control: []float64{91, 14, 16},
 			Starve:  []int{-1, 0, -1},
-			Heur:    map[int]float64{0: 0.08774471992653811, 1: -0.018851239669421482, 2: -0.06798438934802571},
+			Heur:    []float64{0.08774471992653811, -0.018851239669421482, -0.06798438934802571},
 			Move:    "up",
 		}, {
 			Name:    "../testdata/input-016.json",
 			Control: []float64{8, 1},
 			Starve:  []int{0, 0},
-			Heur:    map[int]float64{0: 0.07011111111111111, 1: -0.40244444444444444},
+			Heur:    []float64{0.07011111111111111, -0.40244444444444444},
 			Move:    "up",
 		}, {
 			Name:    "../testdata/input-017.json",
 			Control: []float64{1, 8},
 			Starve:  []int{0, 0},
-			Heur:    map[int]float64{0: -0.40244444444444444, 1: 0.07011111111111111},
+			Heur:    []float64{-0.40244444444444444, 0.07011111111111111},
 			Move:    "left",
 		}, {
 			Name:    "../testdata/input-022.json",
 			Control: []float64{27, 40, 54},
 			Starve:  []int{0, -1, -1},
-			Heur:    map[int]float64{0: -0.014836357303441934, 1: 0.03235929831227638, 2: -0.017068395554288966},
+			Heur:    []float64{-0.014836357303441934, 0.03235929831227638, -0.017068395554288966},
 			Move:    "up",
 		}, {
 			Name:    "../testdata/input-029.json",
 			Control: []float64{3, 22},
 			Starve:  []int{0, 0},
-			Heur:    map[int]float64{0: -0.2649538461538462, 1: 0.06555384615384616},
+			Heur:    []float64{-0.2649538461538462, 0.06555384615384616},
 			Move:    "left",
 		}, {
 			Name:    "../testdata/input-030.json",
 			Control: []float64{60, 61},
 			Starve:  []int{-1, -1},
-			Heur:    map[int]float64{0: -0.035831320194956565, 1: 0.03619495655859293},
+			Heur:    []float64{-0.035831320194956565, 0.03619495655859293},
 			Move:    "up",
 		}, {
 			Name:    "../testdata/input-031.json",
 			Control: []float64{81, 40},
 			Starve:  []int{-1, -1},
-			Heur:    map[int]float64{0: -0.031156198347107443, 1: 0.031610743801652894},
+			Heur:    []float64{-0.031156198347107443, 0.031610743801652894},
 			Move:    "right",
 		},
 		{
 			Name:    "../testdata/input-032.json",
 			Control: []float64{95, 26},
 			Starve:  []int{-1, -1},
-			Heur:    map[int]float64{0: 0.03818801652892562, 1: -0.037733471074380166},
+			Heur:    []float64{0.03818801652892562, -0.037733471074380166},
 			Move:    "up",
 		},
 	}

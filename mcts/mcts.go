@@ -53,7 +53,7 @@ func Once(root *node, o *Opts) error {
 		return nil
 	}
 
-	var totals map[int]float64
+	var totals []float64
 	var err error
 	if o.LeafPlayout {
 		totals, err = playoutRandomRational(root, node, o)
@@ -84,7 +84,7 @@ func expansion(n *node, o *Opts) (*node, error) {
 	moveSet := board.GenMoveSet(n.board)
 
 	if o.AvoidLH2H {
-		temp := make([]map[int]string, 0, len(moveSet))
+		temp := make([][]string, 0, len(moveSet))
 		for _, moves := range moveSet {
 			if board.IsLoosingH2H(n.board, n.rootIdx, moves[n.rootIdx]) {
 				continue
@@ -116,18 +116,20 @@ func expansion(n *node, o *Opts) (*node, error) {
 	return res, nil
 }
 
-func playoutRandomRational(root, node *node, o *Opts) (map[int]float64, error) {
+func playoutRandomRational(root, node *node, o *Opts) ([]float64, error) {
 	//defer lat("playout")()
+	l := len(root.idsByIdx)
 	b := node.board
 	r := node.ruleset
+
 	maxcount := o.MaxPlayout
 	if len(root.board.Snakes) == 1 {
 		maxcount = 100
 	}
 
 	randMoves := func(b *rules.BoardState) []rules.SnakeMove {
-		res := make([]rules.SnakeMove, len(b.Snakes))
-		for i := 0; i < len(b.Snakes); i++ {
+		res := make([]rules.SnakeMove, l)
+		for i := 0; i < l; i++ {
 			if b.Snakes[i].EliminatedCause != "" {
 				continue
 			}
@@ -147,7 +149,7 @@ func playoutRandomRational(root, node *node, o *Opts) (map[int]float64, error) {
 
 	greedyMoves := func(b *rules.BoardState) []rules.SnakeMove {
 		var res []rules.SnakeMove
-		for i := 0; i < len(b.Snakes); i++ {
+		for i := 0; i < l; i++ {
 			res = append(res, rules.SnakeMove{
 				ID:   b.Snakes[i].ID,
 				Move: o.GreedyHeur(b, i),
@@ -156,13 +158,13 @@ func playoutRandomRational(root, node *node, o *Opts) (map[int]float64, error) {
 		return res
 	}
 
-	startLens := make(map[int]int)
+	startLens := make([]int, l)
 	for i := 0; i < len(root.board.Snakes); i++ {
 		startLens[i] = len(root.board.Snakes[i].Body)
 	}
 
 	var count int
-	res := make(map[int]float64)
+	res := make([]float64, l)
 	for {
 		var err error
 
@@ -189,7 +191,7 @@ func playoutRandomRational(root, node *node, o *Opts) (map[int]float64, error) {
 			continue
 		}
 
-		for i := 0; i < len(b.Snakes); i++ {
+		for i := 0; i < l; i++ {
 			if b.Snakes[i].EliminatedCause != "" {
 				res[i] = -1
 				continue
@@ -205,17 +207,11 @@ func playoutRandomRational(root, node *node, o *Opts) (map[int]float64, error) {
 		}
 
 		if o.PlayoutMaxHeur {
-			for idx, total := range heur.Calc(o.HeurFactors, b, o.hazards) {
-				if _, ok := res[idx]; ok {
-					continue
-				}
-				res[idx] = total
-			}
-			return res, nil
+			return heur.Calc(o.HeurFactors, b, o.hazards), nil
 		}
 
-		endLens := make(map[int]int)
-		for i := 0; i < len(b.Snakes); i++ {
+		endLens := make([]int, l)
+		for i := 0; i < l; i++ {
 			endLens[i] = len(b.Snakes[i].Body)
 		}
 		assignLenRewards(o, res, startLens, endLens)
@@ -288,15 +284,15 @@ func SumVoronoi(b *rules.BoardState) map[int]int {
 	return res
 }
 
-func assignLenRewards(o *Opts, res map[int]float64, start, end map[int]int) {
-	if len(start) == 1 {
-		for i := range start {
-			res[i] = -0.1 * math.Min(float64(end[i]-start[i]), 8)
-			return
-		}
+func assignLenRewards(o *Opts, res []float64, start, end []int) {
+	l := len(start)
+
+	if l == 1 {
+		res[0] = -0.1 * math.Min(float64(end[0]-start[0]), 8)
+		return
 	}
 
-	rank := func(m map[int]int, i int) float64 {
+	rank := func(m []int, i int) float64 {
 		var rank float64
 		myLen := m[i]
 		for j, l := range m {
@@ -311,8 +307,8 @@ func assignLenRewards(o *Opts, res map[int]float64, start, end map[int]int) {
 	}
 
 	if o.Version == 3 {
-		for i := range end {
-			if _, ok := res[i]; ok {
+		for i := 0; i < l; i++ {
+			if res[i] != 0 {
 				continue
 			}
 
@@ -326,7 +322,7 @@ func assignLenRewards(o *Opts, res map[int]float64, start, end map[int]int) {
 			res[i] = math.Min(delta, 0.9)
 		}
 	} else {
-		for i := range end {
+		for i := 0; i < l; i++ {
 			if rank(end, i) == 0 {
 				// Longest snake at the end gets 0.5
 				res[i] = 0.1 * float64(len(end)-1)
@@ -337,12 +333,9 @@ func assignLenRewards(o *Opts, res map[int]float64, start, end map[int]int) {
 			res[i] += 0.2 * float64(end[i]-start[i])
 		}
 	}
-
 }
 
 func selection(root *node, o *Opts) *node {
-	//defer lat("selection")()
-
 	n := root
 	for {
 		if n.IsLeaf() {
@@ -363,7 +356,7 @@ func selection(root *node, o *Opts) *node {
 			heuristic  float64
 		}
 
-		allStats := make(map[int]map[string]stats, len(n.idsByIdx))
+		allStats := make([][]stats, len(n.idsByIdx))
 
 		// Calculate stats for each move for each snake
 		for _, tuple := range n.childs {
@@ -373,39 +366,37 @@ func selection(root *node, o *Opts) *node {
 			}
 
 			if o.SelectHeur && len(tuple.child.heurTotals) == 0 {
-				//l := lat("heur")
 				tuple.child.heurTotals = heur.Calc(o.HeurFactors, tuple.child.board, o.hazards)
-				//l()
 			}
 
 			for i := 0; i < len(n.idsByIdx); i++ {
-				snakeStats, ok := allStats[i]
-				if !ok {
-					snakeStats = make(map[string]stats, 4)
+				snakeStats := allStats[i]
+				if snakeStats == nil {
+					snakeStats = make([]stats, 4)
 					allStats[i] = snakeStats
 				}
 
-				for _, move := range board.Moves {
+				for midx, move := range board.Moves {
 					if !tuple.edge.Is(i, move) {
 						continue
 					}
-					st := snakeStats[move]
+					st := snakeStats[midx]
 					st.sumN += tuple.child.n
 					st.sumTotals += tuple.child.totals[i]
 					st.sumSquares += tuple.child.totalSquares[i]
 					st.heuristic += tuple.child.heurTotals[i]
-					snakeStats[move] = st
+					snakeStats[midx] = st
 					break
 				}
 			}
 		}
 
-		maxMoves := make(map[int]string, len(n.idsByIdx))
+		maxMoves := make([]string, len(n.idsByIdx))
 		for i := 0; i < len(n.idsByIdx); i++ {
 			var max *float64
-			for _, move := range board.Moves {
-				st, ok := allStats[i][move]
-				if !ok {
+			for midx, move := range board.Moves {
+				st := allStats[i][midx]
+				if st.sumN == 0 {
 					continue
 				}
 
@@ -447,9 +438,7 @@ func selection(root *node, o *Opts) *node {
 	}
 }
 
-func propagation(node *node, totals map[int]float64) {
-	//defer lat("selection")()
-
+func propagation(node *node, totals []float64) {
 	n := node
 	for n != nil {
 		for idx, t := range totals {
