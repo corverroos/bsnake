@@ -54,11 +54,11 @@ func Test500Once(t *testing.T) {
 		},
 		{
 			Name: "../testdata/input-027.json",
-			Exp:  "right",
+			Exp:  "left",
 		},
 		{
 			Name: "../testdata/input-028.json",
-			Exp:  "right",
+			Exp:  "up",
 		},
 		{
 			Name: "../testdata/input-030.json",
@@ -68,10 +68,10 @@ func Test500Once(t *testing.T) {
 			Name: "../testdata/input-031.json",
 			Exp:  "right",
 		},
-		{
-			Name: "../testdata/input-032.json",
-			Exp:  "down", // Should be up
-		},
+		//{
+		//	Name: "../testdata/input-032.json",
+		//	Exp:  "down", // Flip flows between left and down...
+		//},
 	}
 
 	for _, test := range tests {
@@ -206,6 +206,17 @@ func TestGenMoves(t *testing.T) {
 		Exp  [][]string
 	}{
 		{
+			Name: "../testdata/input-006.json",
+			Exp: [][]string{
+				{"up", "down"},
+				{"right", "down"},
+				{"up", "right"},
+				{"right", "right"},
+				{"up", "left"},
+				{"right", "left"},
+			},
+		},
+		{
 			Name: "../testdata/input-021.json",
 			Exp: [][]string{
 				{"down", "up"},
@@ -222,15 +233,19 @@ func TestGenMoves(t *testing.T) {
 				{"right", "right", "right"},
 				{"right", "down", "left"},
 				{"right", "right", "left"}},
-		}, {
-			Name: "../testdata/input-006.json",
+		},
+		{
+			Name: "../testdata/input-023.json",
 			Exp: [][]string{
-				{"up", "down"},
-				{"right", "down"},
-				{"up", "right"},
+				{"down", "up"},
+				{"right", "up"},
+				{"left", "up"},
+				{"down", "right"},
 				{"right", "right"},
-				{"up", "left"},
+				{"left", "right"},
+				{"down", "left"},
 				{"right", "left"},
+				{"left", "left"},
 			},
 		},
 	}

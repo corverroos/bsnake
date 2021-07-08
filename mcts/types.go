@@ -207,25 +207,48 @@ func (n *node) IsTerminal() bool {
 }
 
 func (n *node) CheckTerminal() ([]float64, bool, error) {
-	if n.board.Snakes[n.rootIdx].EliminatedCause == "" {
-		// We are still alive
-		if ok, err := n.ruleset.IsGameOver(n.board); err != nil {
-			return nil, false, err
-		} else if !ok {
-			// Game not over
-			return nil, false, nil
+	l := len(n.board.Snakes)
+
+	over, err := n.ruleset.IsGameOver(n.board)
+	if err != nil {
+		return nil, false, err
+	}
+
+	var dead int
+	for i := 0; i < l; i++ {
+		if n.board.Snakes[i].EliminatedCause != "" {
+			dead++
 		}
 	}
 
-	// We are dead or game is over
-
 	res := make([]float64, len(n.idsByIdx))
-	for idx, snake := range n.board.Snakes {
-		score := -1.0
-		if snake.EliminatedCause == "" {
-			score = 1
+
+	if over && dead == l && l > 1 {
+		// over and draw: 0 everyone
+		return res, true, nil
+
+	} else if over {
+		// over: 1 for winner, everyone else -1
+		for i := 0; i < l; i++ {
+			res[i] = -1
+			if n.board.Snakes[i].EliminatedCause == "" {
+				res[i] = 1
+			}
 		}
-		res[idx] = score
+
+		return res, true, nil
+	}
+
+	if n.board.Snakes[n.rootIdx].EliminatedCause == "" {
+		// We are alive, not terminal
+		return nil, false, nil
+	}
+
+	// Divide -1 between the dead, 0 for alives
+	for i := 0; i < l; i++ {
+		if n.board.Snakes[i].EliminatedCause != "" {
+			res[i] = -1 / float64(dead)
+		}
 	}
 
 	return res, true, nil
@@ -347,7 +370,7 @@ var (
 	// Basic MCTS with RobustSafe move, big C.
 	// Against boom: 15/27.0 => 0.5555555555555556
 	OptsV2 = Opts{
-		Tuned:        true,
+		Tuned:        false,
 		Version:      1, // 2
 		UCB1_C:       4, // 2
 		MaxPlayout:   30,
@@ -357,7 +380,8 @@ var (
 			Control: 0.05,
 			Length:  0.35,
 			Hunger:  -0.001,
-			Starve:  -0.9,
+			Health:  -0.5,
+			//Starve:  -0.1,
 		},
 	}
 	// Basic MCTS with RobustSafe move, big C.

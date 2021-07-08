@@ -62,7 +62,7 @@ func Once(root *node, o *Opts) error {
 		}
 		o.Logd("propagate play-out, totals=%v", totals)
 	} else if o.LeafHeur {
-		totals = heur.Calc(o.HeurFactors, node.board, o.hazards)
+		totals = heur.Calc(o.HeurFactors, node.board, node.rootIdx, o.hazards)
 		o.Logd("propagate heuristics, totals=%v", totals)
 	} else {
 		panic("invalid options, no leaf strategy")
@@ -82,19 +82,6 @@ func expansion(n *node, o *Opts) (*node, error) {
 
 	var res *node
 	moveSet := board.GenMoveSet(n.board)
-
-	if o.AvoidLH2H {
-		temp := make([][]string, 0, len(moveSet))
-		for _, moves := range moveSet {
-			if board.IsLoosingH2H(n.board, n.rootIdx, moves[n.rootIdx]) {
-				continue
-			}
-			temp = append(temp, moves)
-		}
-		if len(temp) > 0 {
-			moveSet = temp
-		}
-	}
 
 	for i, moves := range moveSet {
 		child, err := n.AppendChild(moves)
@@ -207,7 +194,7 @@ func playoutRandomRational(root, node *node, o *Opts) ([]float64, error) {
 		}
 
 		if o.PlayoutMaxHeur {
-			return heur.Calc(o.HeurFactors, b, o.hazards), nil
+			return heur.Calc(o.HeurFactors, b, node.rootIdx, o.hazards), nil
 		}
 
 		endLens := make([]int, l)
@@ -366,7 +353,7 @@ func selection(root *node, o *Opts) *node {
 			}
 
 			if o.SelectHeur && len(tuple.child.heurTotals) == 0 {
-				tuple.child.heurTotals = heur.Calc(o.HeurFactors, tuple.child.board, o.hazards)
+				tuple.child.heurTotals = heur.Calc(o.HeurFactors, tuple.child.board, n.rootIdx, o.hazards)
 			}
 
 			for i := 0; i < len(n.idsByIdx); i++ {

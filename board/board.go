@@ -71,7 +71,7 @@ func IsLoosingH2H(board *rules.BoardState, snakeIdx int, move string) bool {
 	next := MovePoint(board.Snakes[snakeIdx].Body[0], move)
 
 	for i := 0; i < len(board.Snakes); i++ {
-		if i == snakeIdx || len(board.Snakes[i].Body) <= len(board.Snakes[snakeIdx].Body) {
+		if i == snakeIdx || len(board.Snakes[i].Body) < len(board.Snakes[snakeIdx].Body) {
 			continue
 		}
 		if Distance(next, board.Snakes[i].Body[0]) == 1 {

@@ -16,10 +16,19 @@ type mx struct {
 
 func Minimax(n *node, f *heur.Factors, hazards map[rules.Point]bool, ply int) ([]mx, error) {
 	for _, moves := range board.GenMoveSet(n.board) {
-		child, err := n.AppendChild(moves)
+		tup, err := genChild(n, moves)
 		if err != nil {
 			return nil, err
 		}
+
+		child := tup.child
+
+		if child.board.Snakes[n.rootIdx].EliminatedCause == rules.EliminatedByOutOfHealth && child.depth > 20 {
+			// Root snake out of health on deep node (uncertain). Rather not continue.
+			continue
+		}
+
+		n.childs = append(n.childs, tup)
 
 		if totals, ok, err := child.CheckTerminal(); err != nil {
 			return nil, err
@@ -31,7 +40,7 @@ func Minimax(n *node, f *heur.Factors, hazards map[rules.Point]bool, ply int) ([
 		}
 
 		if ply == 1 {
-			totals := heur.Calc(f, child.board, hazards)
+			totals := heur.Calc(f, child.board, child.rootIdx, hazards)
 			child.heurTotals = totals
 			child.totals = totals
 			child.n++
@@ -82,17 +91,18 @@ func MxPropagate(n *node) []mx {
 			}
 			n.heurTotals[i] = maxScore
 			n.totals[i] = maxScore
-			n.n++
 		}
 	}
+
+	n.n++
 
 	return res
 }
 
-func MinimaxOnce(root *node, o *Opts, hazards map[rules.Point]bool) ([]mx, error) {
+func MxOnce(root *node, o *Opts, hazards map[rules.Point]bool) ([]mx, error) {
 	n := selection(root, o)
 
-	if !n.IsTerminal() && n.board.Snakes[n.rootIdx].EliminatedCause == "" {
+	if !n.IsTerminal() {
 		res, err := Minimax(n, o.HeurFactors, hazards, 1)
 		if err != nil {
 			return nil, err
@@ -135,7 +145,7 @@ func SelectMx(board *rules.BoardState, hazards []rules.Point, rootIDx int, o *Op
 	var moves []mx
 	var err error
 	for time.Since(t0) < time.Millisecond*340 {
-		moves, err = MinimaxOnce(root, o, hazmap)
+		moves, err = MxOnce(root, o, hazmap)
 		if err != nil {
 			return "", err
 		}

@@ -144,7 +144,7 @@ func TestFlood(t *testing.T) {
 				jtest.RequireNil(t, err)
 			}
 
-			control, starve := Flood(b, nil)
+			control, starve := Flood(b, youIdx, nil)
 			require.EqualValues(t, test.Control, control)
 			require.EqualValues(t, test.Starve, starve)
 
@@ -157,7 +157,7 @@ func TestFlood(t *testing.T) {
 				Walls:   0.001,
 			}
 
-			heur := Calc(f, b, nil)
+			heur := Calc(f, b, youIdx, nil)
 			require.EqualValues(t, test.Heur, heur)
 
 			move, _ := SelectMove(f, b, nil, youIdx)

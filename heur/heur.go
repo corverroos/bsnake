@@ -16,9 +16,10 @@ type Factors struct {
 	Walls   float64
 	Hunger  float64
 	Starve  float64
+	Health  float64
 }
 
-func Calc(f *Factors, b *rules.BoardState, hazards map[rules.Point]bool) []float64 {
+func Calc(f *Factors, b *rules.BoardState, rootIdx int, hazards map[rules.Point]bool) []float64 {
 	l := len(b.Snakes)
 
 	res := make([]float64, l)
@@ -31,6 +32,12 @@ func Calc(f *Factors, b *rules.BoardState, hazards map[rules.Point]bool) []float
 		}
 	}
 
+	if f.Health > 0 {
+		for i := 0; i < l; i++ {
+			res[i] += f.Health * (float64(b.Snakes[i].Health) - 100.0) / 100.0
+		}
+	}
+
 	if f.Hunger != 0 {
 		hunger := Hunger(b, hazards)
 		normalize(hunger)
@@ -40,7 +47,7 @@ func Calc(f *Factors, b *rules.BoardState, hazards map[rules.Point]bool) []float
 	}
 
 	if f.Control != 0 || f.Starve != 0 || f.Boxed != 0 {
-		control, starve := Flood(b, hazards)
+		control, starve := Flood(b, rootIdx, hazards)
 
 		if f.Boxed != 0 {
 			for i := 0; i < l; i++ {
@@ -122,7 +129,7 @@ func Hunger(b *rules.BoardState, hazards map[rules.Point]bool) []float64 {
 	return minFood
 }
 
-func Flood(b *rules.BoardState, hazards map[rules.Point]bool) ([]float64, []int) {
+func Flood(b *rules.BoardState, rootIdx int, hazards map[rules.Point]bool) ([]float64, []int) {
 	control := make([]float64, len(b.Snakes))
 	starve := make([]int, len(b.Snakes)) // 1 == true, 0 or -1 == false
 
@@ -164,7 +171,14 @@ func Flood(b *rules.BoardState, hazards map[rules.Point]bool) ([]float64, []int)
 	}
 
 	sort.Slice(q, func(i, j int) bool {
-		return len(b.Snakes[q[i].Idx].Body) > len(b.Snakes[q[j].Idx].Body)
+		if len(b.Snakes[q[i].Idx].Body) != len(b.Snakes[q[j].Idx].Body) {
+			return len(b.Snakes[q[i].Idx].Body) > len(b.Snakes[q[j].Idx].Body)
+		}
+		// TODO(corver): This gives other same length snake control advantage...
+		if q[j].Idx == rootIdx {
+			return true
+		}
+		return false
 	})
 
 	for len(q) > 0 {
@@ -297,7 +311,7 @@ func SelectMove(f *Factors, b *rules.BoardState, hazards map[rules.Point]bool, r
 
 		s.Body = append([]rules.Point{next}, oldBody...)
 
-		res := Calc(f, b, hazards)
+		res := Calc(f, b, rootIdx, hazards)
 
 		if maxMove == "" || maxHeur < res[rootIdx] {
 			maxMove = move
